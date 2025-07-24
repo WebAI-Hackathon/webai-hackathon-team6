@@ -1,0 +1,58 @@
+{
+  "columns": [
+    {
+      "id": "todo",
+      "name": "To Do",
+      "tasks": [
+        {
+          "id": 1,
+          "title": "Setup Project Structure",
+          "description": "Initialize the Vue project and setup basic components",
+          "status": "todo",
+          "priority": "high",
+          "estimatedHours": 4,
+          "comments": "This is the first task to get started",
+          "createdAt": "2024-07-24T10:00:00.000Z",
+          "workLogs": []
+        }
+      ]
+    },
+    {
+      "id": "in-progress",
+      "name": "In Progress",
+      "tasks": [
+        {
+          "id": 2,
+          "title": "Implement Login Function",
+          "description": "Create OAuth integration and frontend login page",
+          "status": "in-progress",
+          "priority": "medium",
+          "estimatedHours": 8,
+          "comments": "Need to implement both OAuth and frontend",
+          "createdAt": "2024-07-24T09:00:00.000Z",
+          "workLogs": [
+            {
+              "id": 1,
+              "developer": "John Doe",
+              "hours": 2,
+              "description": "Implemented OAuth integration with Google and GitHub providers",
+              "timestamp": "2024-07-23T10:00:00.000Z"
+            },
+            {
+              "id": 2,
+              "developer": "Jane Smith",
+              "hours": 3,
+              "description": "Developed the frontend login page with responsive design",
+              "timestamp": "2024-07-23T22:00:00.000Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "done",
+      "name": "Done",
+      "tasks": []
+    }
+  ]
+}
