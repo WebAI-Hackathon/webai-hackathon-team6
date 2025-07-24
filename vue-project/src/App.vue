@@ -2,10 +2,9 @@
 import KanbanBoard from './components/KanbanBoard.vue'
 </script>
 
+
 <template>
-  <div id="app">
     <KanbanBoard />
-  </div>
 </template>
 
 <style>
