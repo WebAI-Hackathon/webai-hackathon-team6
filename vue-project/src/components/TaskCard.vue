@@ -5,20 +5,27 @@
     draggable="true"
     @dragstart="onDragStart"
     @dragend="onDragEnd"
+    @click="viewTask"
   >
     <div class="task-header">
       <div class="task-priority" :class="`priority-${task.priority}`">
-        {{ task.priority.toUpperCase() }}
+        {{ task.priority.charAt(0).toUpperCase() }}
       </div>
-      <div class="task-actions">
-        <button @click="logWork" class="action-btn log-btn" title="Log work">
-          ⏰
+      <div class="task-actions" @click.stop>
+        <button @click="logWork" class="action-btn" title="Log work">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+          </svg>
         </button>
-        <button @click="editTask" class="action-btn edit-btn" title="Edit task">
-          ✏️
+        <button @click="editTask" class="action-btn" title="Edit task">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+          </svg>
         </button>
         <button @click="deleteTask" class="action-btn delete-btn" title="Delete task">
-          🗑️
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+          </svg>
         </button>
       </div>
     </div>
@@ -26,50 +33,23 @@
     <div class="task-content">
       <h4 class="task-title">{{ task.title }}</h4>
       <p v-if="task.description" class="task-description">
-        {{ task.description }}
+        {{ truncateText(task.description, 60) }}
       </p>
     </div>
 
-    <div class="task-hours" v-if="task.estimatedHours > 0 || totalLoggedHours > 0">
-      <div class="hours-item">
-        <span class="hours-label">Estimated:</span>
-        <span class="hours-value">{{ task.estimatedHours }}h</span>
-      </div>
-      <div class="hours-item">
-        <span class="hours-label">Total Logged:</span>
-        <span class="hours-value">{{ totalLoggedHours }}h</span>
-      </div>
-      <div v-if="task.estimatedHours > 0" class="progress-bar">
-        <div 
-          class="progress-fill" 
-          :style="{ width: Math.min((totalLoggedHours / task.estimatedHours) * 100, 100) + '%' }"
-          :class="{ 'over-estimate': totalLoggedHours > task.estimatedHours }"
-        ></div>
-      </div>
-    </div>
-
-    <div v-if="task.workLogs && task.workLogs.length > 0" class="work-logs">
-      <div class="work-logs-header">📝 Work History:</div>
-      <div class="work-log-list">
-        <div v-for="log in task.workLogs" :key="log.id" class="work-log-item">
-          <div class="work-log-meta">
-            <span class="work-log-developer">{{ log.developer }}</span>
-            <span class="work-log-hours">{{ log.hours }}h</span>
-            <span class="work-log-date">{{ formatDate(log.timestamp) }}</span>
-          </div>
-          <div class="work-log-description">{{ log.description }}</div>
+    <div class="task-meta">
+      <div v-if="task.estimatedHours > 0" class="hours-indicator">
+        <span class="hours-text">{{ totalLoggedHours }}/{{ task.estimatedHours }}h</span>
+        <div class="progress-mini">
+          <div 
+            class="progress-fill-mini" 
+            :style="{ width: Math.min((totalLoggedHours / task.estimatedHours) * 100, 100) + '%' }"
+            :class="{ 'over-estimate': totalLoggedHours > task.estimatedHours }"
+          ></div>
         </div>
       </div>
-    </div>
-
-    <div v-if="task.comments" class="task-comments">
-      <div class="comments-header">💬 Comments:</div>
-      <div class="comments-text">{{ task.comments }}</div>
-    </div>
-
-    <div class="task-footer">
-      <div class="task-date">
-        Created: {{ formatDate(task.createdAt) }}
+      <div v-if="task.workLogs && task.workLogs.length > 0" class="work-logs-count">
+        {{ task.workLogs.length }} log{{ task.workLogs.length !== 1 ? 's' : '' }}
       </div>
     </div>
   </div>
@@ -85,7 +65,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['edit-task', 'delete-task', 'log-work'])
+const emit = defineEmits(['edit-task', 'delete-task', 'log-work', 'view-task'])
 
 const isDragging = ref(false)
 
@@ -116,48 +96,61 @@ const logWork = () => {
   emit('log-work', props.task.id)
 }
 
-const formatDate = (dateString) => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  })
+const viewTask = () => {
+  emit('view-task', props.task.id)
+}
+
+const truncateText = (text, maxLength) => {
+  if (text.length <= maxLength) return text
+  return text.substring(0, maxLength) + '...'
 }
 </script>
 
 <style scoped>
 .task-card {
   background: white;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 16px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  cursor: grab;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
   transition: all 0.2s ease;
-  border-left: 4px solid #dee2e6;
+  border: 1px solid #f1f3f4;
+  position: relative;
+  overflow: hidden;
 }
 
-.task-card:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  transform: translateY(-1px);
-}
-
-.task-card.dragging {
-  opacity: 0.5;
-  transform: rotate(2deg);
-  cursor: grabbing;
+.task-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--priority-color);
 }
 
 .task-card.priority-high {
-  border-left-color: #dc3545;
+  --priority-color: #ef4444;
 }
 
 .task-card.priority-medium {
-  border-left-color: #ffc107;
+  --priority-color: #f59e0b;
 }
 
 .task-card.priority-low {
-  border-left-color: #28a745;
+  --priority-color: #10b981;
+}
+
+.task-card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+  border-color: #e5e7eb;
+}
+
+.task-card.dragging {
+  opacity: 0.6;
+  transform: rotate(3deg) scale(0.95);
+  cursor: grabbing;
 }
 
 .task-header {
@@ -168,192 +161,110 @@ const formatDate = (dateString) => {
 }
 
 .task-priority {
-  font-size: 10px;
-  font-weight: bold;
-  padding: 4px 8px;
-  border-radius: 12px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
   color: white;
-}
-
-.task-priority.priority-high {
-  background: #dc3545;
-}
-
-.task-priority.priority-medium {
-  background: #ffc107;
-  color: #212529;
-}
-
-.task-priority.priority-low {
-  background: #28a745;
+  background: var(--priority-color);
 }
 
 .task-actions {
   display: flex;
   gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.task-card:hover .task-actions {
+  opacity: 1;
 }
 
 .action-btn {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  font-size: 14px;
-  transition: background-color 0.2s;
+  padding: 6px;
+  border-radius: 6px;
+  color: #6b7280;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .action-btn:hover {
-  background: #f8f9fa;
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.action-btn.delete-btn:hover {
+  background: #fef2f2;
+  color: #dc2626;
 }
 
 .task-title {
   margin: 0 0 8px 0;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
-  color: #2c3e50;
+  color: #111827;
   line-height: 1.3;
 }
 
 .task-description {
-  margin: 0 0 12px 0;
-  font-size: 14px;
-  color: #6c757d;
+  margin: 0 0 16px 0;
+  font-size: 13px;
+  color: #6b7280;
   line-height: 1.4;
 }
 
-.task-hours {
-  background: #f8f9fa;
-  border-radius: 6px;
-  padding: 12px;
-  margin-bottom: 12px;
-}
-
-.hours-item {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 4px;
-  font-size: 13px;
-}
-
-.hours-label {
-  color: #6c757d;
-  font-weight: 500;
-}
-
-.hours-value {
-  color: #495057;
-  font-weight: 600;
-}
-
-.progress-bar {
-  margin-top: 8px;
-  background: #e9ecef;
-  border-radius: 3px;
-  height: 6px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: #28a745;
-  transition: width 0.3s ease;
-  border-radius: 3px;
-}
-
-.progress-fill.over-estimate {
-  background: #dc3545;
-}
-
-.work-logs {
-  background: #f0f8ff;
-  border-radius: 6px;
-  padding: 12px;
-  margin-bottom: 12px;
-  border: 1px solid #e3f2fd;
-}
-
-.work-logs-header {
-  font-size: 12px;
-  font-weight: 600;
-  color: #1976d2;
-  margin-bottom: 8px;
-}
-
-.work-log-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.work-log-item {
-  background: white;
-  border-radius: 4px;
-  padding: 8px;
-  border-left: 3px solid #2196f3;
-}
-
-.work-log-meta {
+.task-meta {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 4px;
-  font-size: 11px;
+  font-size: 12px;
+  color: #9ca3af;
 }
 
-.work-log-developer {
-  font-weight: 600;
-  color: #1976d2;
+.hours-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.work-log-hours {
-  background: #e3f2fd;
-  color: #1976d2;
-  padding: 2px 6px;
-  border-radius: 10px;
+.hours-text {
   font-weight: 500;
+  color: #4b5563;
 }
 
-.work-log-date {
-  color: #9e9e9e;
+.progress-mini {
+  width: 40px;
+  height: 4px;
+  background: #f3f4f6;
+  border-radius: 2px;
+  overflow: hidden;
 }
 
-.work-log-description {
-  font-size: 12px;
-  color: #424242;
-  line-height: 1.3;
+.progress-fill-mini {
+  height: 100%;
+  background: #10b981;
+  transition: width 0.3s ease;
+  border-radius: 2px;
 }
 
-.task-comments {
-  background: #f8f9fa;
-  border-radius: 6px;
-  padding: 12px;
-  margin-bottom: 12px;
+.progress-fill-mini.over-estimate {
+  background: #ef4444;
 }
 
-.comments-header {
-  font-size: 12px;
-  font-weight: 600;
-  color: #495057;
-  margin-bottom: 6px;
-}
-
-.comments-text {
-  font-size: 13px;
-  color: #6c757d;
-  line-height: 1.4;
-  white-space: pre-wrap;
-}
-
-.task-footer {
-  border-top: 1px solid #e9ecef;
-  padding-top: 8px;
-  margin-top: 12px;
-}
-
-.task-date {
-  font-size: 11px;
-  color: #adb5bd;
-  text-align: right;
+.work-logs-count {
+  background: #f3f4f6;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+  color: #6b7280;
 }
 </style>
