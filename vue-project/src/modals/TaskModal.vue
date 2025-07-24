@@ -42,9 +42,21 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label>Estimated Hours</label>
-                    <input v-model.number="formData.estimatedHours" type="number" min="0" step="0.5" placeholder="0" />
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tag</label>
+                        <select v-model="formData.tag">
+                            <option value="bug-fix">Bug Fix</option>
+                            <option value="feature">Feature</option>
+                            <option value="organisational">Organisational</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Estimated Hours</label>
+                        <input v-model.number="formData.estimatedHours" type="number" min="0" step="0.5"
+                            placeholder="0" />
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -79,6 +91,7 @@ const formData = reactive({
     description: '',
     status: 'todo',
     priority: 'medium',
+    tag: 'feature',
     estimatedHours: 0,
     comments: ''
 })

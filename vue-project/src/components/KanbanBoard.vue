@@ -64,6 +64,7 @@ const taskForm = reactive({
   description: '',
   status: 'todo',
   priority: 'medium',
+  tag: 'feature',
   estimatedHours: 0,
   comments: ''
 })
@@ -84,6 +85,7 @@ const resetForm = () => {
   taskForm.description = ''
   taskForm.status = 'todo'
   taskForm.priority = 'medium'
+  taskForm.tag = 'feature'
   taskForm.estimatedHours = 0
   taskForm.comments = ''
 }
@@ -205,6 +207,7 @@ const editTask = (taskId) => {
       description: task.description,
       status: task.status,
       priority: task.priority,
+      tag: task.tag || 'feature',
       estimatedHours: task.estimatedHours,
       comments: task.comments
     })

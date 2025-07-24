@@ -5,8 +5,13 @@
                 <div class="task-detail-header">
                     <div class="task-detail-title">
                         <h3>{{ task?.title }}</h3>
-                        <div class="task-priority-badge" :class="`priority-${task?.priority}`">
-                            {{ task?.priority?.toUpperCase() }}
+                        <div class="task-badges">
+                            <div class="task-priority-badge" :class="`priority-${task?.priority}`">
+                                {{ task?.priority?.toUpperCase() }}
+                            </div>
+                            <div v-if="task?.tag" class="task-tag-badge" :class="`tag-${task?.tag}`">
+                                {{ getTagDisplayName(task?.tag) }}
+                            </div>
                         </div>
                     </div>
                     <div class="task-detail-status">
@@ -55,6 +60,7 @@
                     </div>
                 </div>
 
+                <!-- ...existing work history section... -->
                 <div v-if="task?.workLogs && task.workLogs.length > 0" class="task-detail-section">
                     <div class="section-header">
                         <h4>Work History</h4>
@@ -107,6 +113,10 @@
                             <span class="info-label">Task ID:</span>
                             <span class="info-value">#{{ task?.id }}</span>
                         </div>
+                        <div v-if="task?.tag" class="info-item">
+                            <span class="info-label">Tag:</span>
+                            <span class="info-value">{{ getTagDisplayName(task?.tag) }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -150,6 +160,15 @@ const getStatusDisplayName = (status) => {
         'done': 'Done'
     }
     return statusMap[status] || status
+}
+
+const getTagDisplayName = (tag) => {
+    const tagMap = {
+        'bug-fix': 'Bug Fix',
+        'feature': 'Feature',
+        'organisational': 'Organisational'
+    }
+    return tagMap[tag] || tag
 }
 
 const formatDetailedDate = (dateString) => {
@@ -220,7 +239,14 @@ const formatDetailedDate = (dateString) => {
     font-weight: 600;
 }
 
-.task-priority-badge {
+.task-badges {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.task-priority-badge,
+.task-tag-badge {
     padding: 4px 12px;
     border-radius: 20px;
     font-size: 11px;
@@ -238,6 +264,18 @@ const formatDetailedDate = (dateString) => {
 
 .task-priority-badge.priority-low {
     background: #10b981;
+}
+
+.task-tag-badge.tag-bug-fix {
+    background: #dc2626;
+}
+
+.task-tag-badge.tag-feature {
+    background: #2563eb;
+}
+
+.task-tag-badge.tag-organisational {
+    background: #0891b2;
 }
 
 .task-detail-status {

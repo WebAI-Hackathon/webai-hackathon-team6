@@ -1,12 +1,6 @@
 <template>
-  <div 
-    class="task-card"
-    :class="[`priority-${task.priority}`, { dragging: isDragging }]"
-    draggable="true"
-    @dragstart="onDragStart"
-    @dragend="onDragEnd"
-    @click="viewTask"
-  >
+  <div class="task-card" :class="[`priority-${task.priority}`, { dragging: isDragging }]" draggable="true"
+    @dragstart="onDragStart" @dragend="onDragEnd" @click="viewTask">
     <div class="task-header">
       <div class="task-priority" :class="`priority-${task.priority}`">
         {{ task.priority.charAt(0).toUpperCase() }}
@@ -14,24 +8,31 @@
       <div class="task-actions" @click.stop>
         <button @click="logWork" class="action-btn" title="Log work">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
           </svg>
         </button>
         <button @click="editTask" class="action-btn" title="Edit task">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+            <path
+              d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
           </svg>
         </button>
         <button @click="deleteTask" class="action-btn delete-btn" title="Delete task">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
           </svg>
         </button>
       </div>
     </div>
 
     <div class="task-content">
-      <h4 class="task-title">{{ task.title }}</h4>
+      <div class="task-title-row">
+        <h4 class="task-title">{{ task.title }}</h4>
+        <div v-if="task.tag" class="task-tag" :class="`tag-${task.tag}`">
+          {{ getTagDisplayName(task.tag) }}
+        </div>
+      </div>
       <p v-if="task.description" class="task-description">
         {{ truncateText(task.description, 60) }}
       </p>
@@ -41,11 +42,9 @@
       <div v-if="task.estimatedHours > 0" class="hours-indicator">
         <span class="hours-text">{{ totalLoggedHours }}/{{ task.estimatedHours }}h</span>
         <div class="progress-mini">
-          <div 
-            class="progress-fill-mini" 
+          <div class="progress-fill-mini"
             :style="{ width: Math.min((totalLoggedHours / task.estimatedHours) * 100, 100) + '%' }"
-            :class="{ 'over-estimate': totalLoggedHours > task.estimatedHours }"
-          ></div>
+            :class="{ 'over-estimate': totalLoggedHours > task.estimatedHours }"></div>
         </div>
       </div>
       <div v-if="task.workLogs && task.workLogs.length > 0" class="work-logs-count">
@@ -73,6 +72,15 @@ const totalLoggedHours = computed(() => {
   if (!props.task.workLogs) return 0
   return props.task.workLogs.reduce((total, log) => total + log.hours, 0)
 })
+
+const getTagDisplayName = (tag) => {
+  const tagMap = {
+    'bug-fix': 'Bug Fix',
+    'feature': 'Feature',
+    'organisational': 'Organisational'
+  }
+  return tagMap[tag] || tag
+}
 
 const onDragStart = (event) => {
   isDragging.value = true
@@ -207,12 +215,47 @@ const truncateText = (text, maxLength) => {
   color: #dc2626;
 }
 
+.task-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
 .task-title {
-  margin: 0 0 8px 0;
+  margin: 0;
   font-size: 15px;
   font-weight: 600;
   color: #111827;
   line-height: 1.3;
+  flex: 1;
+}
+
+.task-tag {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.task-tag.tag-bug-fix {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.task-tag.tag-feature {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.task-tag.tag-organisational {
+  background: #f0f9ff;
+  color: #0891b2;
 }
 
 .task-description {
