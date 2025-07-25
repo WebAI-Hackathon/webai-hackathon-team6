@@ -2,7 +2,7 @@
     <div class="projects-page">
         <div class="page-header">
             <h1>Projects</h1>
-            <button class="add-project-btn">
+            <button @click="showProjectModal = true" class="add-project-btn">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
                 </svg>
@@ -20,18 +20,40 @@
                 </div>
                 <div class="project-actions">
                     <button @click="viewKanban(project.id)" class="kanban-btn">View Board</button>
-                    <button class="details-btn">Details</button>
+                    <button @click="viewProjectDetails(project.id)" class="details-btn">Details</button>
                 </div>
             </div>
         </div>
+
+        <!-- Modals -->
+        <ProjectModal :show="showProjectModal" :editing-project="editingProject" :project-form="projectForm"
+            @close="closeModal" @save="saveProject" />
+
+        <ProjectDetailModal :show="showProjectDetailModal" :project="viewingProject" @close="closeProjectDetailModal"
+            @edit-project="editProject" @delete-project="handleDeleteProject" @view-kanban="handleViewKanban" />
     </div>
 </template>
 
 <script setup>
+import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { projects } from '../stores/projectStore.js'
+import { projects, addProject, updateProject, deleteProject, getProjectById } from '../stores/projectStore.js'
+import ProjectModal from '../modals/ProjectModal.vue'
+import ProjectDetailModal from '../modals/ProjectDetailModal.vue'
 
 const router = useRouter()
+
+// Modal states
+const showProjectModal = ref(false)
+const showProjectDetailModal = ref(false)
+const editingProject = ref(null)
+const viewingProject = ref(null)
+
+// Form data
+const projectForm = reactive({
+    name: '',
+    description: ''
+})
 
 const viewKanban = (projectId) => {
     router.push(`/kanban/${projectId}`)
@@ -42,7 +64,72 @@ const calculateProgress = (project) => {
     const completed = project.tasks.filter(t => t.status === 'done').length
     return Math.round((completed / project.tasks.length) * 100)
 }
+
+// Project Modal Methods
+const resetForm = () => {
+    Object.assign(projectForm, {
+        name: '',
+        description: ''
+    })
+}
+
+const closeModal = () => {
+    showProjectModal.value = false
+    editingProject.value = null
+    resetForm()
+}
+
+const saveProject = (formData) => {
+    if (editingProject.value) {
+        // Update existing project
+        updateProject(editingProject.value, formData)
+    } else {
+        // Create new project
+        addProject(formData)
+    }
+    closeModal()
+}
+
+// Project Detail Modal Methods
+const viewProjectDetails = (projectId) => {
+    const project = getProjectById(projectId)
+    if (project) {
+        viewingProject.value = project
+        showProjectDetailModal.value = true
+    }
+}
+
+const closeProjectDetailModal = () => {
+    showProjectDetailModal.value = false
+    viewingProject.value = null
+}
+
+const editProject = (projectId) => {
+    closeProjectDetailModal()
+    const project = getProjectById(projectId)
+    if (project) {
+        editingProject.value = projectId
+        Object.assign(projectForm, {
+            name: project.name,
+            description: project.description
+        })
+        showProjectModal.value = true
+    }
+}
+
+const handleDeleteProject = (projectId) => {
+    if (confirm('Are you sure you want to delete this project? This will also delete all tasks in the project.')) {
+        closeProjectDetailModal()
+        deleteProject(projectId)
+    }
+}
+
+const handleViewKanban = (projectId) => {
+    closeProjectDetailModal()
+    viewKanban(projectId)
+}
 </script>
+
 
 <style scoped>
 .projects-page {

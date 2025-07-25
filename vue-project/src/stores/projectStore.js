@@ -85,3 +85,31 @@ export const addWorkLog = (projectId, taskId, workLogData) => {
 
     task.workLogs.push(newWorkLog)
 }
+
+// Add these functions to your existing projectStore.js
+export const addProject = (projectData) => {
+    const newProject = {
+        id: Date.now(),
+        ...projectData,
+        createdAt: new Date().toISOString(),
+        tasks: []
+    }
+
+    projects.value.push(newProject)
+    return newProject
+}
+
+export const updateProject = (projectId, updates) => {
+    const projectIndex = projects.value.findIndex(p => p.id === projectId)
+    if (projectIndex !== -1) {
+        Object.assign(projects.value[projectIndex], updates)
+    }
+}
+
+export const deleteProject = (projectId) => {
+    projects.value = projects.value.filter(p => p.id !== projectId)
+}
+
+export const getProjectById = (projectId) => {
+    return projects.value.find(p => p.id === projectId)
+}
