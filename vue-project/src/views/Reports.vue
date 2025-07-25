@@ -115,7 +115,7 @@
                     <div class="report-meta">
                         <span class="report-date">Generated: {{ formatDate(reportGeneratedAt) }}</span>
                         <span class="report-role">For: {{ targetRole?.charAt(0).toUpperCase() + targetRole?.slice(1)
-                            }}</span>
+                        }}</span>
                     </div>
                     <div class="report-text" v-html="formattedReport"></div>
                 </div>
@@ -133,25 +133,116 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
+import { ReportService } from '../services/reportService.js'
 
-// Mock project data (replace with actual data source)
+// Import or fetch actual project data (replace with your data source)
+// For now, using the same mock data but in a real app, this would come from your API
 const projects = ref([
     {
         id: 1,
         name: 'Cloud Migration Project',
+        description: 'Migrate Dynamics CRM to Dynamics 365',
         tasks: [
-            { id: 1, title: 'System Assessment', tag: 'organisational', status: 'done' },
-            { id: 2, title: 'Data Migration Planning', tag: 'feature', status: 'in-progress' },
-            { id: 3, title: 'Security Configuration', tag: 'bug-fix', status: 'todo' },
-            { id: 4, title: 'User Training', tag: 'organisational', status: 'todo' }
+            {
+                id: 1,
+                title: 'System Assessment',
+                description: 'Analyze current on-premise infrastructure and dependencies',
+                tag: 'organisational',
+                status: 'done',
+                estimatedHours: 16,
+                workLogs: [
+                    {
+                        id: 1,
+                        developer: 'Michael Ritter',
+                        hours: 8,
+                        description: 'Completed infrastructure analysis and dependency mapping',
+                        timestamp: '2024-07-20T10:00:00.000Z'
+                    },
+                    {
+                        id: 2,
+                        developer: 'Julia Schmidt',
+                        hours: 6,
+                        description: 'Documented current system architecture and integration points',
+                        timestamp: '2024-07-21T14:00:00.000Z'
+                    }
+                ]
+            },
+            {
+                id: 2,
+                title: 'Data Migration Planning',
+                description: 'Plan data cleansing and migration strategy',
+                tag: 'feature',
+                status: 'in-progress',
+                estimatedHours: 24,
+                workLogs: [
+                    {
+                        id: 3,
+                        developer: 'Julia Schmidt',
+                        hours: 12,
+                        description: 'Created data mapping documentation and identified duplicate records',
+                        timestamp: '2024-07-22T09:00:00.000Z'
+                    }
+                ]
+            },
+            {
+                id: 3,
+                title: 'Security Configuration',
+                description: 'Configure Azure AD and security roles',
+                tag: 'bug-fix',
+                status: 'todo',
+                estimatedHours: 20,
+                workLogs: []
+            },
+            {
+                id: 4,
+                title: 'User Training',
+                description: 'Conduct training sessions for end users',
+                tag: 'organisational',
+                status: 'todo',
+                estimatedHours: 32,
+                workLogs: []
+            }
         ]
     },
     {
         id: 2,
         name: 'Website Redesign',
+        description: 'Modern responsive website with improved UX',
         tasks: [
-            { id: 5, title: 'UI Design', tag: 'feature', status: 'done' },
-            { id: 6, title: 'Frontend Development', tag: 'feature', status: 'in-progress' }
+            {
+                id: 5,
+                title: 'UI Design',
+                description: 'Create modern user interface designs',
+                tag: 'feature',
+                status: 'done',
+                estimatedHours: 40,
+                workLogs: [
+                    {
+                        id: 4,
+                        developer: 'Sofia Weber',
+                        hours: 35,
+                        description: 'Completed all UI mockups and prototypes',
+                        timestamp: '2024-07-15T16:00:00.000Z'
+                    }
+                ]
+            },
+            {
+                id: 6,
+                title: 'Frontend Development',
+                description: 'Implement responsive frontend code',
+                tag: 'feature',
+                status: 'in-progress',
+                estimatedHours: 60,
+                workLogs: [
+                    {
+                        id: 5,
+                        developer: 'Pritesh Soni',
+                        hours: 25,
+                        description: 'Implemented responsive layout and component structure',
+                        timestamp: '2024-07-23T11:00:00.000Z'
+                    }
+                ]
+            }
         ]
     }
 ])
@@ -239,133 +330,39 @@ const generateReport = async () => {
             ? availableTags.value.map(tag => tag.value)
             : selectedTags_.value
 
+        // Filter tasks by selected tags if not all tags are selected
+        const filteredTasks = selectAllTags.value
+            ? tasksToInclude
+            : tasksToInclude.filter(task => tagsToInclude.includes(task.tag))
+
         const reportData = {
             project: project.name,
-            tasks: tasksToInclude,
+            tasks: filteredTasks,
             tags: tagsToInclude,
             targetRole: targetRole.value
         }
 
-        // Simulate API call (replace with actual OpenAI API call)
-        const report = await mockGenerateReport(reportData)
+        console.log('Generating report with data:', reportData)
+
+        // Call the actual API
+        const report = await ReportService.generateReport(reportData)
 
         generatedReport.value = report
         reportGeneratedAt.value = new Date()
     } catch (err) {
+        console.error('Report generation error:', err)
         error.value = err.message || 'Failed to generate report'
     } finally {
         isGenerating.value = false
     }
 }
 
-// Mock API function (replace with actual OpenAI integration)
-const mockGenerateReport = async (data) => {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            const reports = {
-                developer: `# Technical Project Report: ${data.project}
-
-## Project Overview
-${data.project} is currently in progress with ${data.tasks.length} tasks being tracked across ${data.tags.length} different categories.
-
-## Technical Status
-### Completed Tasks
-${data.tasks.filter(t => t.status === 'done').map(t => `- ${t.title}`).join('\n')}
-
-### In Progress
-${data.tasks.filter(t => t.status === 'in-progress').map(t => `- ${t.title}`).join('\n')}
-
-### Pending Tasks
-${data.tasks.filter(t => t.status === 'todo').map(t => `- ${t.title}`).join('\n')}
-
-## Technical Recommendations
-- Focus on completing in-progress tasks before starting new ones
-- Ensure proper testing coverage for all completed features
-- Consider code review process for critical components
-
-## Risk Assessment
-- Medium risk: Dependencies between tasks may cause delays
-- Low risk: Current team capacity appears adequate`,
-
-                manager: `# Executive Project Summary: ${data.project}
-
-## Project Status
-The ${data.project} is progressing as planned with ${data.tasks.filter(t => t.status === 'done').length} of ${data.tasks.length} tasks completed.
-
-## Key Metrics
-- Completion Rate: ${Math.round((data.tasks.filter(t => t.status === 'done').length / data.tasks.length) * 100)}%
-- Tasks in Progress: ${data.tasks.filter(t => t.status === 'in-progress').length}
-- Remaining Tasks: ${data.tasks.filter(t => t.status === 'todo').length}
-
-## Business Impact
-The project is on track to deliver significant value through improved efficiency and reduced operational costs.
-
-## Resource Requirements
-Current team allocation appears sufficient for project completion within timeline.
-
-## Next Steps
-1. Monitor progress on current in-progress tasks
-2. Prepare for user acceptance testing phase
-3. Plan change management activities`,
-
-                hr: `# HR Project Impact Report: ${data.project}
-
-## Team Development Opportunities
-The ${data.project} presents excellent learning opportunities for team members across multiple skill areas.
-
-## Training Requirements
-Based on project tasks, the following training may be beneficial:
-- Technical skills development for feature implementation
-- Process improvement methodologies
-- Change management techniques
-
-## Team Engagement
-Project involves ${data.tasks.length} distinct tasks, providing variety and growth opportunities for team members.
-
-## Resource Planning
-- Current team capacity: Adequate
-- Skill development: In progress
-- Knowledge transfer: Required for organizational tasks
-
-## Recommendations
-1. Implement peer learning sessions
-2. Document best practices for future projects
-3. Plan recognition activities for project milestones`,
-
-                marketing: `# Marketing Project Insights: ${data.project}
-
-## Project Communication Strategy
-${data.project} offers multiple touchpoints for stakeholder engagement and success story development.
-
-## Key Messages
-- Innovation: Leveraging cutting-edge technology solutions
-- Efficiency: Streamlining processes for better outcomes
-- Growth: Building foundation for future expansion
-
-## Success Metrics for Communication
-- Project completion milestones: ${data.tasks.filter(t => t.status === 'done').length} achieved
-- Team achievements: Multiple deliverables completed
-- Process improvements: Ongoing optimization
-
-## Content Opportunities
-1. Technical achievement spotlights
-2. Team success stories
-3. Process improvement case studies
-4. Innovation highlights
-
-## Stakeholder Engagement
-Regular updates and milestone celebrations will maintain momentum and visibility.`
-            }
-
-            resolve(reports[data.targetRole] || reports.manager)
-        }, 2000)
-    })
-}
-
+// Keep existing utility functions
 const copyReport = async () => {
     try {
         await navigator.clipboard.writeText(generatedReport.value)
         // You could add a toast notification here
+        console.log('Report copied to clipboard')
     } catch (err) {
         console.error('Failed to copy report:', err)
     }
@@ -376,7 +373,7 @@ const downloadReport = () => {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `report-${selectedProject.value}-${Date.now()}.txt`
+    a.download = `${projects.value.find(p => p.id == selectedProject.value)?.name.replace(/\s+/g, '-').toLowerCase()}-report-${Date.now()}.txt`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
