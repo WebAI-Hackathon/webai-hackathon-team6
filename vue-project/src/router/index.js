@@ -1,4 +1,5 @@
-import { createRouter, createWebHistory } from 'vue-router'
+// src/router/index.js
+import { createRouter, createWebHashHistory } from 'vue-router'
 import KanbanBoard from '../components/KanbanBoard.vue'
 import Projects from '../views/Projects.vue'
 import Reports from '../views/Reports.vue'
@@ -6,7 +7,9 @@ import Reports from '../views/Reports.vue'
 const routes = [
     {
         path: '/',
-        redirect: '/projects'
+        // redirect: '/projects'
+        name: 'Home',
+        component: Projects
     },
     {
         path: '/projects',
@@ -27,7 +30,7 @@ const routes = [
 ]
 
 const router = createRouter({
-    history: createWebHistory(),
+    history: createWebHashHistory(), // Remove the base path from here
     routes
 })
 

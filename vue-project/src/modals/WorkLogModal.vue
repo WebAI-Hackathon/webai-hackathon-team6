@@ -50,14 +50,28 @@ const props = defineProps({
 const emit = defineEmits(['close', 'save'])
 
 const formData = reactive({
-    developer: '',
+    developer: 'Pritesh Soni',
     hours: 0,
     description: ''
 })
 
+// Reset form to defaults when modal opens
+watch(() => props.show, (newShow) => {
+    if (newShow) {
+        // Reset to default values when modal opens
+        formData.developer = 'Pritesh Soni'
+        formData.hours = 0
+        formData.description = ''
+    }
+})
+
 watch(() => props.workLogForm, (newForm) => {
     if (newForm) {
-        Object.assign(formData, newForm)
+        Object.assign(formData, {
+            developer: 'Pritesh Soni', // Ensure default name is always set
+            hours: newForm.hours || 0,
+            description: newForm.description || ''
+        })
     }
 }, { deep: true, immediate: true })
 
@@ -65,7 +79,6 @@ const handleSave = () => {
     emit('save', { ...formData })
 }
 </script>
-
 <style scoped>
 .modal-overlay {
     position: fixed;

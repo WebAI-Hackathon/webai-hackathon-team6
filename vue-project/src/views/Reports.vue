@@ -92,22 +92,30 @@
 
             <!-- Generated Report -->
             <div v-if="generatedReport" class="report-output">
-                <div class="report-header">
-                    <h2>Generated Report</h2>
-                    <div class="report-actions">
-                        <button @click="copyReport" class="action-btn">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                <path
-                                    d="M16 1H4C2.9 1 2 1.9 2 3v14h2V3h12V1zm3 4H8C6.9 5 6 5.9 6 7v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
-                            </svg>
-                            Copy
-                        </button>
-                        <button @click="downloadReport" class="action-btn">
+                <div class="report-actions">
+                    <button @click="copyReport" class="action-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M16 1H4C2.9 1 2 1.9 2 3v14h2V3h12V1zm3 4H8C6.9 5 6 5.9 6 7v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+                        </svg>
+                        Copy
+                    </button>
+
+                    <!-- Dropdown for download options -->
+                    <div class="download-dropdown">
+                        <button @click="downloadReport('html')" class="action-btn primary">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                                 <path
                                     d="M5 20h14v-2H5v2zm7-18L5.5 8.5l1.41 1.41L11 4.83V16h2V4.83l4.09 5.08L18.5 8.5L12 2z" />
                             </svg>
-                            Download
+                            Download HTML
+                        </button>
+                        <button @click="downloadReport('text')" class="action-btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M5 20h14v-2H5v2zm7-18L5.5 8.5l1.41 1.41L11 4.83V16h2V4.83l4.09 5.08L18.5 8.5L12 2z" />
+                            </svg>
+                            Download TXT
                         </button>
                     </div>
                 </div>
@@ -115,7 +123,7 @@
                     <div class="report-meta">
                         <span class="report-date">Generated: {{ formatDate(reportGeneratedAt) }}</span>
                         <span class="report-role">For: {{ targetRole?.charAt(0).toUpperCase() + targetRole?.slice(1)
-                            }}</span>
+                        }}</span>
                     </div>
                     <div class="report-text" v-html="formattedReport"></div>
                 </div>
@@ -133,28 +141,10 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
+import { ReportService } from '../services/reportService.js'
+import projectsData from '../data/projects.json'
 
-// Mock project data (replace with actual data source)
-const projects = ref([
-    {
-        id: 1,
-        name: 'Cloud Migration Project',
-        tasks: [
-            { id: 1, title: 'System Assessment', tag: 'organisational', status: 'done' },
-            { id: 2, title: 'Data Migration Planning', tag: 'feature', status: 'in-progress' },
-            { id: 3, title: 'Security Configuration', tag: 'bug-fix', status: 'todo' },
-            { id: 4, title: 'User Training', tag: 'organisational', status: 'todo' }
-        ]
-    },
-    {
-        id: 2,
-        name: 'Website Redesign',
-        tasks: [
-            { id: 5, title: 'UI Design', tag: 'feature', status: 'done' },
-            { id: 6, title: 'Frontend Development', tag: 'feature', status: 'in-progress' }
-        ]
-    }
-])
+const projects = ref(projectsData)
 
 const availableTags = ref([
     { value: 'bug-fix', label: 'Bug Fix' },
@@ -190,7 +180,24 @@ const canGenerate = computed(() => {
 })
 
 const formattedReport = computed(() => {
-    return generatedReport.value.replace(/\n/g, '<br>')
+    if (!generatedReport.value) return ''
+
+    // Clean up the report and ensure proper HTML formatting
+    let formatted = generatedReport.value
+        // Remove any markdown-style headers that might slip through
+        .replace(/^#{1,6}\s+/gm, '')
+        // Ensure proper paragraph spacing
+        .replace(/\n\n+/g, '</p><p>')
+        // Handle line breaks within paragraphs
+        .replace(/\n/g, '<br>')
+    // Wrap in paragraphs if not already wrapped
+
+    // If the content doesn't start with HTML tags, wrap it
+    if (!formatted.trim().startsWith('<')) {
+        formatted = `<p>${formatted}</p>`
+    }
+
+    return formatted
 })
 
 // Watchers
@@ -239,148 +246,192 @@ const generateReport = async () => {
             ? availableTags.value.map(tag => tag.value)
             : selectedTags_.value
 
+        // Filter tasks by selected tags if not all tags are selected
+        const filteredTasks = selectAllTags.value
+            ? tasksToInclude
+            : tasksToInclude.filter(task => tagsToInclude.includes(task.tag))
+
         const reportData = {
             project: project.name,
-            tasks: tasksToInclude,
+            tasks: filteredTasks,
             tags: tagsToInclude,
             targetRole: targetRole.value
         }
 
-        // Simulate API call (replace with actual OpenAI API call)
-        const report = await mockGenerateReport(reportData)
+        console.log('Generating report with data:', reportData)
+
+        // Call the actual API
+        const report = await ReportService.generateReport(reportData)
 
         generatedReport.value = report
         reportGeneratedAt.value = new Date()
     } catch (err) {
+        console.error('Report generation error:', err)
         error.value = err.message || 'Failed to generate report'
     } finally {
         isGenerating.value = false
     }
 }
 
-// Mock API function (replace with actual OpenAI integration)
-const mockGenerateReport = async (data) => {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            const reports = {
-                developer: `# Technical Project Report: ${data.project}
-
-## Project Overview
-${data.project} is currently in progress with ${data.tasks.length} tasks being tracked across ${data.tags.length} different categories.
-
-## Technical Status
-### Completed Tasks
-${data.tasks.filter(t => t.status === 'done').map(t => `- ${t.title}`).join('\n')}
-
-### In Progress
-${data.tasks.filter(t => t.status === 'in-progress').map(t => `- ${t.title}`).join('\n')}
-
-### Pending Tasks
-${data.tasks.filter(t => t.status === 'todo').map(t => `- ${t.title}`).join('\n')}
-
-## Technical Recommendations
-- Focus on completing in-progress tasks before starting new ones
-- Ensure proper testing coverage for all completed features
-- Consider code review process for critical components
-
-## Risk Assessment
-- Medium risk: Dependencies between tasks may cause delays
-- Low risk: Current team capacity appears adequate`,
-
-                manager: `# Executive Project Summary: ${data.project}
-
-## Project Status
-The ${data.project} is progressing as planned with ${data.tasks.filter(t => t.status === 'done').length} of ${data.tasks.length} tasks completed.
-
-## Key Metrics
-- Completion Rate: ${Math.round((data.tasks.filter(t => t.status === 'done').length / data.tasks.length) * 100)}%
-- Tasks in Progress: ${data.tasks.filter(t => t.status === 'in-progress').length}
-- Remaining Tasks: ${data.tasks.filter(t => t.status === 'todo').length}
-
-## Business Impact
-The project is on track to deliver significant value through improved efficiency and reduced operational costs.
-
-## Resource Requirements
-Current team allocation appears sufficient for project completion within timeline.
-
-## Next Steps
-1. Monitor progress on current in-progress tasks
-2. Prepare for user acceptance testing phase
-3. Plan change management activities`,
-
-                hr: `# HR Project Impact Report: ${data.project}
-
-## Team Development Opportunities
-The ${data.project} presents excellent learning opportunities for team members across multiple skill areas.
-
-## Training Requirements
-Based on project tasks, the following training may be beneficial:
-- Technical skills development for feature implementation
-- Process improvement methodologies
-- Change management techniques
-
-## Team Engagement
-Project involves ${data.tasks.length} distinct tasks, providing variety and growth opportunities for team members.
-
-## Resource Planning
-- Current team capacity: Adequate
-- Skill development: In progress
-- Knowledge transfer: Required for organizational tasks
-
-## Recommendations
-1. Implement peer learning sessions
-2. Document best practices for future projects
-3. Plan recognition activities for project milestones`,
-
-                marketing: `# Marketing Project Insights: ${data.project}
-
-## Project Communication Strategy
-${data.project} offers multiple touchpoints for stakeholder engagement and success story development.
-
-## Key Messages
-- Innovation: Leveraging cutting-edge technology solutions
-- Efficiency: Streamlining processes for better outcomes
-- Growth: Building foundation for future expansion
-
-## Success Metrics for Communication
-- Project completion milestones: ${data.tasks.filter(t => t.status === 'done').length} achieved
-- Team achievements: Multiple deliverables completed
-- Process improvements: Ongoing optimization
-
-## Content Opportunities
-1. Technical achievement spotlights
-2. Team success stories
-3. Process improvement case studies
-4. Innovation highlights
-
-## Stakeholder Engagement
-Regular updates and milestone celebrations will maintain momentum and visibility.`
-            }
-
-            resolve(reports[data.targetRole] || reports.manager)
-        }, 2000)
-    })
-}
-
+// Keep existing utility functions
 const copyReport = async () => {
     try {
         await navigator.clipboard.writeText(generatedReport.value)
         // You could add a toast notification here
+        console.log('Report copied to clipboard')
     } catch (err) {
         console.error('Failed to copy report:', err)
     }
 }
 
-const downloadReport = () => {
-    const blob = new Blob([generatedReport.value], { type: 'text/plain' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `report-${selectedProject.value}-${Date.now()}.txt`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+const downloadReport = (format = 'html') => {
+    const project = projects.value.find(p => p.id == selectedProject.value)
+    const projectName = project?.name.replace(/\s+/g, '-').toLowerCase() || 'report'
+    const timestamp = Date.now()
+
+    if (format === 'html') {
+        // Create a complete HTML document
+        const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Report - ${project?.name}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.7;
+            color: #374151;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: #ffffff;
+        }
+        
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1f2937;
+            margin: 32px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 3px solid #8b5cf6;
+        }
+        
+        h2 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 28px 0 14px 0;
+            padding: 12px 16px;
+            border-left: 4px solid #8b5cf6;
+            background: linear-gradient(90deg, rgba(139, 92, 246, 0.05) 0%, transparent 100%);
+            border-radius: 0 8px 8px 0;
+        }
+        
+        h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #374151;
+            margin: 20px 0 10px 0;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        p {
+            margin: 16px 0;
+            text-align: justify;
+        }
+        
+        strong {
+            font-weight: 600;
+            color: #1f2937;
+            background: rgba(139, 92, 246, 0.1);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        ul {
+            margin: 16px 0;
+            padding-left: 0;
+            list-style: none;
+        }
+        
+        ul li {
+            position: relative;
+            margin: 8px 0;
+            padding-left: 24px;
+            line-height: 1.6;
+        }
+        
+        ul li::before {
+            content: '•';
+            color: #8b5cf6;
+            font-weight: bold;
+            position: absolute;
+            left: 8px;
+            font-size: 16px;
+        }
+        
+        .report-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f3f4f6;
+        }
+        
+        .report-meta {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        
+        @media print {
+            body { margin: 0; padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="report-header">
+        <h1>Project Report: ${project?.name}</h1>
+        <div class="report-meta">
+            Generated: ${formatDate(reportGeneratedAt.value)}<br>
+            Target Audience: ${targetRole.value?.charAt(0).toUpperCase() + targetRole.value?.slice(1)}
+        </div>
+    </div>
+    
+    ${formattedReport.value}
+</body>
+</html>`
+
+        const blob = new Blob([htmlContent], { type: 'text/html' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${projectName}-report-${timestamp}.html`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+    } else {
+        // Plain text version (strip HTML tags)
+        const textContent = generatedReport.value
+            .replace(/<[^>]*>/g, '') // Remove HTML tags
+            .replace(/&nbsp;/g, ' ') // Replace non-breaking spaces
+            .replace(/&amp;/g, '&') // Replace HTML entities
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/\n\s*\n/g, '\n\n') // Clean up extra whitespace
+
+        const blob = new Blob([textContent], { type: 'text/plain' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${projectName}-report-${timestamp}.txt`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+    }
 }
 
 const formatDate = (date) => {
@@ -595,6 +646,22 @@ const formatDate = (date) => {
 .report-actions {
     display: flex;
     gap: 8px;
+    margin: 8px;
+}
+
+.download-dropdown {
+    display: flex;
+    gap: 4px;
+}
+
+.action-btn.primary {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+}
+
+.action-btn.primary:hover {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    transform: translateY(-1px);
 }
 
 .action-btn {
@@ -631,11 +698,185 @@ const formatDate = (date) => {
     color: #6b7280;
 }
 
+
 .report-text {
     color: #374151;
     line-height: 1.7;
-    white-space: pre-wrap;
-    font-family: 'Georgia', serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-size: 15px;
+}
+
+/* Enhanced report styling */
+.report-text :deep(h1) {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 32px 0 16px 0;
+    padding-bottom: 8px;
+    border-bottom: 3px solid #8b5cf6;
+}
+
+.report-text :deep(h2) {
+    font-size: 22px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 28px 0 14px 0;
+    padding-left: 12px;
+    border-left: 4px solid #8b5cf6;
+    background: linear-gradient(90deg, rgba(139, 92, 246, 0.05) 0%, transparent 100%);
+    padding: 12px 16px;
+    border-radius: 0 8px 8px 0;
+}
+
+.report-text :deep(h3) {
+    font-size: 18px;
+    font-weight: 600;
+    color: #374151;
+    margin: 20px 0 10px 0;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.report-text :deep(h4) {
+    font-size: 16px;
+    font-weight: 600;
+    color: #4b5563;
+    margin: 16px 0 8px 0;
+}
+
+.report-text :deep(p) {
+    margin: 16px 0;
+    line-height: 1.7;
+    text-align: justify;
+}
+
+.report-text :deep(strong) {
+    font-weight: 600;
+    color: #1f2937;
+    background: rgba(139, 92, 246, 0.1);
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+.report-text :deep(em) {
+    font-style: italic;
+    color: #6b7280;
+    background: rgba(107, 114, 128, 0.1);
+    padding: 1px 3px;
+    border-radius: 2px;
+}
+
+.report-text :deep(ul) {
+    margin: 16px 0;
+    padding-left: 0;
+    list-style: none;
+}
+
+.report-text :deep(ul li) {
+    position: relative;
+    margin: 8px 0;
+    padding-left: 24px;
+    line-height: 1.6;
+}
+
+.report-text :deep(ul li::before) {
+    content: '•';
+    color: #8b5cf6;
+    font-weight: bold;
+    position: absolute;
+    left: 8px;
+    font-size: 16px;
+}
+
+.report-text :deep(ol) {
+    margin: 16px 0;
+    padding-left: 20px;
+    counter-reset: custom-counter;
+}
+
+.report-text :deep(ol li) {
+    margin: 8px 0;
+    padding-left: 8px;
+    line-height: 1.6;
+    position: relative;
+    counter-increment: custom-counter;
+}
+
+.report-text :deep(ol li::before) {
+    content: counter(custom-counter) '.';
+    color: #8b5cf6;
+    font-weight: 600;
+    margin-right: 8px;
+}
+
+/* Highlight important metrics and numbers */
+.report-text :deep(:is(p, li):has(span:contains('%'))) {
+    background: rgba(16, 185, 129, 0.05);
+    padding: 8px 12px;
+    border-radius: 6px;
+    border-left: 3px solid #10b981;
+    margin: 12px 0;
+}
+
+/* Style for code-like content */
+.report-text :deep(code) {
+    background: #f3f4f6;
+    color: #1f2937;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 13px;
+}
+
+/* Blockquote styling for important callouts */
+.report-text :deep(blockquote) {
+    margin: 20px 0;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(124, 58, 237, 0.05) 100%);
+    border-left: 4px solid #8b5cf6;
+    border-radius: 0 8px 8px 0;
+    font-style: italic;
+    color: #4b5563;
+}
+
+/* Table styling if tables are generated */
+.report-text :deep(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.report-text :deep(th) {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    color: white;
+    padding: 12px 16px;
+    text-align: left;
+    font-weight: 600;
+}
+
+.report-text :deep(td) {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.report-text :deep(tr:nth-child(even)) {
+    background: #fafafa;
+}
+
+/* Special styling for metrics and statistics */
+.report-text :deep(.metric) {
+    display: inline-block;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 14px;
+    margin: 2px 4px;
 }
 
 .error-message {
@@ -675,6 +916,41 @@ const formatDate = (date) => {
 
     .report-config {
         position: static;
+    }
+
+}
+
+@media (max-width: 768px) {
+    .report-text {
+        font-size: 14px;
+    }
+
+    .report-text :deep(h1) {
+        font-size: 24px;
+    }
+
+    .report-text :deep(h2) {
+        font-size: 20px;
+        padding: 8px 12px;
+    }
+
+    .report-text :deep(h3) {
+        font-size: 16px;
+    }
+}
+
+/* Loading animation improvements */
+.loading-icon {
+    animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
     }
 }
 </style>

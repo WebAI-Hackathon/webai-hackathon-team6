@@ -1,0 +1,150 @@
+[
+  {
+    "id": 1,
+    "name": "Cloud Migration Project",
+    "description": "Migrate Dynamics CRM to Dynamics 365",
+    "tasks": [
+      {
+        "id": 1,
+        "title": "System Assessment",
+        "description": "Analyze current on-premise infrastructure and dependencies",
+        "tag": "organisational",
+        "status": "done",
+        "estimatedHours": 16,
+        "workLogs": [
+          {
+            "id": 1,
+            "developer": "Michael Ritter",
+            "hours": 8,
+            "description": "Completed infrastructure analysis and dependency mapping",
+            "timestamp": "2024-07-20T10:00:00.000Z"
+          },
+          {
+            "id": 2,
+            "developer": "Julia Schmidt",
+            "hours": 6,
+            "description": "Documented current system architecture and integration points",
+            "timestamp": "2024-07-21T14:00:00.000Z"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Data Migration Planning",
+        "description": "Plan data cleansing and migration strategy",
+        "tag": "feature",
+        "status": "in-progress",
+        "estimatedHours": 24,
+        "workLogs": [
+          {
+            "id": 3,
+            "developer": "Julia Schmidt",
+            "hours": 12,
+            "description": "Created data mapping documentation and identified duplicate records",
+            "timestamp": "2024-07-22T09:00:00.000Z"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Security Configuration",
+        "description": "Configure Azure AD and security roles",
+        "tag": "bug-fix",
+        "status": "todo",
+        "estimatedHours": 20,
+        "workLogs": []
+      },
+      {
+        "id": 4,
+        "title": "User Training",
+        "description": "Conduct training sessions for end users",
+        "tag": "organisational",
+        "status": "todo",
+        "estimatedHours": 32,
+        "workLogs": []
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Website Redesign",
+    "description": "Modern responsive website with improved UX",
+    "tasks": [
+      {
+        "id": 5,
+        "title": "UI Design",
+        "description": "Create modern user interface designs",
+        "tag": "feature",
+        "status": "done",
+        "estimatedHours": 40,
+        "workLogs": [
+          {
+            "id": 4,
+            "developer": "Sofia Weber",
+            "hours": 35,
+            "description": "Completed all UI mockups and prototypes",
+            "timestamp": "2024-07-15T16:00:00.000Z"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Frontend Development",
+        "description": "Implement responsive frontend code",
+        "tag": "feature",
+        "status": "in-progress",
+        "estimatedHours": 60,
+        "workLogs": [
+          {
+            "id": 5,
+            "developer": "Pritesh Soni",
+            "hours": 25,
+            "description": "Implemented responsive layout and component structure",
+            "timestamp": "2024-07-23T11:00:00.000Z"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "name": "E-commerce Platform",
+    "description": "Build modern e-commerce solution with payment integration",
+    "tasks": [
+      {
+        "id": 7,
+        "title": "Payment Gateway Integration",
+        "description": "Integrate Stripe and PayPal payment systems",
+        "tag": "feature",
+        "status": "done",
+        "estimatedHours": 32,
+        "workLogs": [
+          {
+            "id": 6,
+            "developer": "Alex Johnson",
+            "hours": 28,
+            "description": "Successfully integrated both payment gateways with error handling",
+            "timestamp": "2024-07-18T14:30:00.000Z"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Database Optimization",
+        "description": "Optimize database queries for better performance",
+        "tag": "bug-fix",
+        "status": "in-progress",
+        "estimatedHours": 16,
+        "workLogs": [
+          {
+            "id": 7,
+            "developer": "Maria Rodriguez",
+            "hours": 8,
+            "description": "Analyzed slow queries and created optimization plan",
+            "timestamp": "2024-07-24T09:15:00.000Z"
+          }
+        ]
+      }
+    ]
+  }
+]
