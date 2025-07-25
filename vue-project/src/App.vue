@@ -14,7 +14,7 @@
 
     <nav class="main-nav">
       <div class="nav-brand">
-        <h2>Project Manager</h2>
+        <h2>Projectly</h2>
       </div>
       <div class="nav-links">
         <router-link to="/projects" class="nav-link">Projects</router-link>
