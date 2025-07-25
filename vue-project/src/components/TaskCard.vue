@@ -63,14 +63,13 @@ const props = defineProps({
     required: true
   }
 })
+const isDragging = ref(false)
 
 const emit = defineEmits(['edit-task', 'delete-task', 'log-work', 'view-task'])
 
-const isDragging = ref(false)
-
 const totalLoggedHours = computed(() => {
-  if (!props.task.workLogs) return 0
-  return props.task.workLogs.reduce((total, log) => total + log.hours, 0)
+  if (!props.task.workLogs || props.task.workLogs.length === 0) return 0
+  return props.task.workLogs.reduce((total, log) => total + (log.hours || 0), 0)
 })
 
 const getTagDisplayName = (tag) => {
@@ -79,7 +78,7 @@ const getTagDisplayName = (tag) => {
     'feature': 'Feature',
     'organisational': 'Organisational'
   }
-  return tagMap[tag] || tag
+  return tagMap[tag] || tag?.charAt(0).toUpperCase() + tag?.slice(1) || 'Feature'
 }
 
 const onDragStart = (event) => {

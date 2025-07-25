@@ -11,15 +11,15 @@
         </div>
 
         <div class="projects-grid">
-            <div class="project-card">
-                <h3>Cloud Migration Project</h3>
-                <p>Migrate Dynamics CRM to Dynamics 365</p>
+            <div v-for="project in projects" :key="project.id" class="project-card">
+                <h3>{{ project.name }}</h3>
+                <p>{{ project.description }}</p>
                 <div class="project-meta">
-                    <span class="project-status">In Progress</span>
-                    <span class="project-date">Due: Oct 15, 2025</span>
+                    <span class="project-status">{{ calculateProgress(project) }}% Complete</span>
+                    <span class="project-date">{{ project.tasks?.length || 0 }} tasks</span>
                 </div>
                 <div class="project-actions">
-                    <button @click="viewKanban" class="kanban-btn">View Board</button>
+                    <button @click="viewKanban(project.id)" class="kanban-btn">View Board</button>
                     <button class="details-btn">Details</button>
                 </div>
             </div>
@@ -29,11 +29,20 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
+import projectsData from '../data/projects.json'
+import { ref } from 'vue'
 
 const router = useRouter()
+const projects = ref(projectsData)
 
-const viewKanban = () => {
-    router.push('/kanban/1')
+const viewKanban = (projectId) => {
+    router.push(`/kanban/${projectId}`)
+}
+
+const calculateProgress = (project) => {
+    if (!project.tasks || project.tasks.length === 0) return 0
+    const completed = project.tasks.filter(t => t.status === 'done').length
+    return Math.round((completed / project.tasks.length) * 100)
 }
 </script>
 

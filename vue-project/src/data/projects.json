@@ -2,25 +2,61 @@
   {
     "id": 1,
     "name": "Cloud Migration Project",
-    "description": "Migrate Dynamics CRM to Dynamics 365",
+    "description": "Migrate legacy on-premise Dynamics CRM system to cloud-based Dynamics 365",
+    "createdAt": "2024-07-01T09:00:00.000Z",
     "tasks": [
       {
         "id": 1,
-        "title": "System Assessment",
-        "description": "Analyze current on-premise infrastructure and dependencies",
+        "title": "Setup Project Structure",
+        "description": "Initialize the Vue project and setup basic components",
+        "status": "todo",
+        "priority": "high",
         "tag": "organisational",
-        "status": "done",
-        "estimatedHours": 16,
+        "estimatedHours": 4,
+        "comments": "This is the first task to get started",
+        "createdAt": "2024-07-24T10:00:00.000Z",
+        "workLogs": []
+      },
+      {
+        "id": 2,
+        "title": "Implement Login Function",
+        "description": "Create OAuth integration and frontend login page",
+        "status": "in-progress",
+        "priority": "medium",
+        "tag": "feature",
+        "estimatedHours": 8,
+        "comments": "Need to implement both OAuth and frontend",
+        "createdAt": "2024-07-24T09:00:00.000Z",
         "workLogs": [
           {
             "id": 1,
+            "developer": "John Doe",
+            "hours": 2,
+            "description": "Implemented OAuth integration with Google and GitHub providers",
+            "timestamp": "2024-07-23T10:00:00.000Z"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "System Assessment",
+        "description": "Analyze current on-premise infrastructure and dependencies",
+        "status": "done",
+        "priority": "high",
+        "tag": "organisational",
+        "estimatedHours": 16,
+        "comments": "Critical foundation task for the entire migration",
+        "createdAt": "2024-07-01T10:00:00.000Z",
+        "workLogs": [
+          {
+            "id": 2,
             "developer": "Michael Ritter",
             "hours": 8,
             "description": "Completed infrastructure analysis and dependency mapping",
             "timestamp": "2024-07-20T10:00:00.000Z"
           },
           {
-            "id": 2,
+            "id": 3,
             "developer": "Julia Schmidt",
             "hours": 6,
             "description": "Documented current system architecture and integration points",
@@ -29,60 +65,49 @@
         ]
       },
       {
-        "id": 2,
+        "id": 4,
         "title": "Data Migration Planning",
-        "description": "Plan data cleansing and migration strategy",
-        "tag": "feature",
+        "description": "Plan data cleansing and migration strategy for customer records",
         "status": "in-progress",
+        "priority": "high",
+        "tag": "feature",
         "estimatedHours": 24,
+        "comments": "Need to handle legacy data format compatibility",
+        "createdAt": "2024-07-02T09:00:00.000Z",
         "workLogs": [
           {
-            "id": 3,
+            "id": 4,
             "developer": "Julia Schmidt",
             "hours": 12,
             "description": "Created data mapping documentation and identified duplicate records",
             "timestamp": "2024-07-22T09:00:00.000Z"
           }
         ]
-      },
-      {
-        "id": 3,
-        "title": "Security Configuration",
-        "description": "Configure Azure AD and security roles",
-        "tag": "bug-fix",
-        "status": "todo",
-        "estimatedHours": 20,
-        "workLogs": []
-      },
-      {
-        "id": 4,
-        "title": "User Training",
-        "description": "Conduct training sessions for end users",
-        "tag": "organisational",
-        "status": "todo",
-        "estimatedHours": 32,
-        "workLogs": []
       }
     ]
   },
   {
     "id": 2,
     "name": "Website Redesign",
-    "description": "Modern responsive website with improved UX",
+    "description": "Complete responsive redesign of company website with modern UX/UI",
+    "createdAt": "2024-06-15T09:00:00.000Z",
     "tasks": [
       {
         "id": 5,
-        "title": "UI Design",
-        "description": "Create modern user interface designs",
-        "tag": "feature",
+        "title": "UI/UX Design Phase",
+        "description": "Create modern user interface designs and user experience flows",
         "status": "done",
+        "priority": "high",
+        "tag": "feature",
         "estimatedHours": 40,
+        "comments": "Designs approved by stakeholders",
+        "createdAt": "2024-06-15T10:00:00.000Z",
         "workLogs": [
           {
-            "id": 4,
+            "id": 5,
             "developer": "Sofia Weber",
             "hours": 35,
-            "description": "Completed all UI mockups and prototypes",
+            "description": "Completed all UI mockups and interactive prototypes",
             "timestamp": "2024-07-15T16:00:00.000Z"
           }
         ]
@@ -90,13 +115,16 @@
       {
         "id": 6,
         "title": "Frontend Development",
-        "description": "Implement responsive frontend code",
-        "tag": "feature",
+        "description": "Implement responsive frontend code using Vue.js",
         "status": "in-progress",
+        "priority": "high",
+        "tag": "feature",
         "estimatedHours": 60,
+        "comments": "Following component-based architecture",
+        "createdAt": "2024-06-20T09:00:00.000Z",
         "workLogs": [
           {
-            "id": 5,
+            "id": 6,
             "developer": "Pritesh Soni",
             "hours": 25,
             "description": "Implemented responsive layout and component structure",
@@ -109,21 +137,25 @@
   {
     "id": 3,
     "name": "E-commerce Platform",
-    "description": "Build modern e-commerce solution with payment integration",
+    "description": "Build comprehensive e-commerce solution with payment integration",
+    "createdAt": "2024-06-01T09:00:00.000Z",
     "tasks": [
       {
         "id": 7,
         "title": "Payment Gateway Integration",
-        "description": "Integrate Stripe and PayPal payment systems",
-        "tag": "feature",
+        "description": "Integrate Stripe and PayPal payment systems with error handling",
         "status": "done",
+        "priority": "high",
+        "tag": "feature",
         "estimatedHours": 32,
+        "comments": "Both payment providers successfully integrated",
+        "createdAt": "2024-06-01T10:00:00.000Z",
         "workLogs": [
           {
-            "id": 6,
+            "id": 7,
             "developer": "Alex Johnson",
             "hours": 28,
-            "description": "Successfully integrated both payment gateways with error handling",
+            "description": "Successfully integrated both payment gateways with comprehensive error handling",
             "timestamp": "2024-07-18T14:30:00.000Z"
           }
         ]
@@ -131,19 +163,14 @@
       {
         "id": 8,
         "title": "Database Optimization",
-        "description": "Optimize database queries for better performance",
+        "description": "Optimize database queries and indexes for better performance",
+        "status": "todo",
+        "priority": "medium",
         "tag": "bug-fix",
-        "status": "in-progress",
         "estimatedHours": 16,
-        "workLogs": [
-          {
-            "id": 7,
-            "developer": "Maria Rodriguez",
-            "hours": 8,
-            "description": "Analyzed slow queries and created optimization plan",
-            "timestamp": "2024-07-24T09:15:00.000Z"
-          }
-        ]
+        "comments": "Focus on product catalog and search queries",
+        "createdAt": "2024-06-05T09:00:00.000Z",
+        "workLogs": []
       }
     ]
   }
