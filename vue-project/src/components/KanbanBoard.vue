@@ -144,7 +144,7 @@ const logWork = (taskId) => {
 }
 
 const resetWorkLogForm = () => {
-  workLogForm.developer = ''
+  workLogForm.developer = 'Pritesh Soni'
   workLogForm.hours = 0
   workLogForm.description = ''
 }
