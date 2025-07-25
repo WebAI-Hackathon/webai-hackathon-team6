@@ -53,11 +53,15 @@ import projectsData from '../data/projects.json'
 
 const route = useRoute()
 
+// Create a reactive copy of the projects data
+const projects = ref(JSON.parse(JSON.stringify(projectsData)))
+
 // Get the current project based on the route parameter
 const currentProject = computed(() => {
   const projectId = parseInt(route.params.projectId) || 1
-  return projectsData.find(p => p.id === projectId) || projectsData[0]
+  return projects.value.find(p => p.id === projectId) || projects.value[0]
 })
+
 
 // Create columns based on the current project's tasks
 const columns = computed(() => [
