@@ -2,8 +2,8 @@
   <div class="kanban-board">
     <div class="board-header">
       <div class="header-content">
-        <h1>Project Management</h1>
-        <p class="header-subtitle">Organize your workflow efficiently</p>
+        <h1>{{ currentProject?.name || 'Project Management' }}</h1>
+        <p class="header-subtitle">{{ currentProject?.description || 'Organize your workflow efficiently' }}</p>
       </div>
       <button @click="showTaskModal = true" class="add-task-btn">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -25,7 +25,7 @@
 
         <div class="tasks-container">
           <TaskCard v-for="task in column.tasks" :key="task.id" :task="task" @edit-task="editTask"
-            @delete-task="deleteTask" @log-work="logWork" @view-task="viewTask" />
+            @delete-task="handleDeleteTask" @log-work="logWork" @view-task="viewTask" />
         </div>
       </div>
     </div>
@@ -35,7 +35,7 @@
       @save="saveTask" />
 
     <TaskDetailModal :show="showTaskDetailModal" :task="viewingTask" @close="closeTaskDetailModal" @edit-task="editTask"
-      @delete-task="deleteTask" @log-work="logWork" />
+      @delete-task="handleDeleteTask" @log-work="logWork" />
 
     <WorkLogModal :show="showWorkLogModal" :task="workLogTask" :work-log-form="workLogForm" @close="closeWorkLogModal"
       @save="saveWorkLog" />
@@ -43,12 +43,40 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import TaskCard from './TaskCard.vue'
-import initialData from '../data/initialData.json'
 import TaskModal from '@/modals/TaskModal.vue'
 import TaskDetailModal from '@/modals/TaskDetailModal.vue'
 import WorkLogModal from '@/modals/WorkLogModal.vue'
+import projectsData from '../data/projects.json'
+
+const route = useRoute()
+
+// Get the current project based on the route parameter
+const currentProject = computed(() => {
+  const projectId = parseInt(route.params.projectId) || 1
+  return projectsData.find(p => p.id === projectId) || projectsData[0]
+})
+
+// Create columns based on the current project's tasks
+const columns = computed(() => [
+  {
+    id: 'todo',
+    name: 'To Do',
+    tasks: currentProject.value.tasks.filter(task => task.status === 'todo')
+  },
+  {
+    id: 'in-progress',
+    name: 'In Progress',
+    tasks: currentProject.value.tasks.filter(task => task.status === 'in-progress')
+  },
+  {
+    id: 'done',
+    name: 'Done',
+    tasks: currentProject.value.tasks.filter(task => task.status === 'done')
+  }
+])
 
 // Modal states
 const showTaskModal = ref(false)
@@ -70,14 +98,15 @@ const taskForm = reactive({
 })
 
 const workLogForm = reactive({
-  developer: '',
+  developer: 'Pritesh Soni',
   hours: 0,
   description: ''
 })
 
-// Data
-const columns = ref(initialData.columns)
-let nextTaskId = 3
+// Helper function to find a task in the current project
+const findTask = (taskId) => {
+  return currentProject.value.tasks.find(task => task.id === taskId)
+}
 
 // Task Modal Methods
 const resetForm = () => {
@@ -99,30 +128,26 @@ const closeModal = () => {
 const saveTask = (formData) => {
   if (editingTask.value) {
     // Update existing task
-    const task = findTaskById(editingTask.value)
-    if (task) {
-      Object.assign(task, formData)
-      moveTaskToColumn(task, formData.status)
+    const taskIndex = currentProject.value.tasks.findIndex(t => t.id === editingTask.value)
+    if (taskIndex !== -1) {
+      Object.assign(currentProject.value.tasks[taskIndex], formData)
     }
   } else {
     // Create new task
     const newTask = {
-      id: nextTaskId++,
+      id: Date.now(),
       ...formData,
       createdAt: new Date().toISOString(),
       workLogs: []
     }
-
-    const column = columns.value.find(col => col.id === formData.status)
-    column.tasks.push(newTask)
+    currentProject.value.tasks.push(newTask)
   }
-
   closeModal()
 }
 
 // Task Detail Modal Methods
 const viewTask = (taskId) => {
-  const task = findTaskById(taskId)
+  const task = findTask(taskId)
   if (task) {
     viewingTask.value = task
     showTaskDetailModal.value = true
@@ -136,7 +161,7 @@ const closeTaskDetailModal = () => {
 
 // Work Log Modal Methods
 const logWork = (taskId) => {
-  const task = findTaskById(taskId)
+  const task = findTask(taskId)
   if (task) {
     workLogTask.value = task
     showWorkLogModal.value = true
@@ -172,34 +197,10 @@ const saveWorkLog = (formData) => {
   closeWorkLogModal()
 }
 
-// Utility Methods
-const findTaskById = (taskId) => {
-  for (const column of columns.value) {
-    const task = column.tasks.find(t => t.id === taskId)
-    if (task) return task
-  }
-  return null
-}
-
-const moveTaskToColumn = (task, newStatus) => {
-  // Remove from current column
-  for (const column of columns.value) {
-    const index = column.tasks.findIndex(t => t.id === task.id)
-    if (index !== -1) {
-      column.tasks.splice(index, 1)
-      break
-    }
-  }
-
-  // Add to new column
-  const targetColumn = columns.value.find(col => col.id === newStatus)
-  task.status = newStatus
-  targetColumn.tasks.push(task)
-}
-
+// Task Actions
 const editTask = (taskId) => {
-  closeTaskDetailModal() // Close detail modal if open
-  const task = findTaskById(taskId)
+  closeTaskDetailModal()
+  const task = findTask(taskId)
   if (task) {
     editingTask.value = taskId
     Object.assign(taskForm, {
@@ -215,28 +216,27 @@ const editTask = (taskId) => {
   }
 }
 
-const deleteTask = (taskId) => {
+const handleDeleteTask = (taskId) => {
   if (confirm('Are you sure you want to delete this task?')) {
-    closeTaskDetailModal() // Close detail modal if open
-    for (const column of columns.value) {
-      const index = column.tasks.findIndex(t => t.id === taskId)
-      if (index !== -1) {
-        column.tasks.splice(index, 1)
-        break
-      }
+    closeTaskDetailModal()
+    const taskIndex = currentProject.value.tasks.findIndex(t => t.id === taskId)
+    if (taskIndex !== -1) {
+      currentProject.value.tasks.splice(taskIndex, 1)
     }
   }
 }
 
 const onDrop = (event, columnId) => {
   const taskId = parseInt(event.dataTransfer.getData('taskId'))
-  const task = findTaskById(taskId)
+  const task = findTask(taskId)
 
   if (task && task.status !== columnId) {
-    moveTaskToColumn(task, columnId)
+    task.status = columnId
   }
 }
 </script>
+
+
 
 <style scoped>
 .kanban-board {
