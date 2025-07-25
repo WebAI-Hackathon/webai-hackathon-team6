@@ -91,6 +91,15 @@
       VOIX Status: {{ currentUser.voixActive ? 'Active' : 'Inactive' }}
       User Preferences: {{ currentUser.language }} language for voice commands
       
+      Current Project:
+      Project ID: {{ currentProject?.id }}
+      Project Name: "{{ currentProject?.name }}"
+      Project Description: "{{ currentProject?.description }}"
+      Project Created: {{ currentProject?.createdAt }}
+      Project Manager: {{ currentProject?.manager }}
+      Project Status: {{ currentProject?.status }}
+      Total Project Tasks: {{ currentProject?.tasks?.length || 0 }}
+      
       Available Tasks:
       Todo Tasks: {{ todoTasks.map(t => `ID ${t.id}: "${t.title}" - ${t.description ? t.description.substring(0, 100) + (t.description.length > 100 ? '...' : '') : 'No description'} (${t.estimatedHours}h estimated, Priority: ${t.priority})`).join(' | ') || 'None' }}
       In Progress Tasks: {{ inProgressTasks.map(t => `ID ${t.id}: "${t.title}" - ${t.description ? t.description.substring(0, 100) + (t.description.length > 100 ? '...' : '') : 'No description'} (${t.estimatedHours}h estimated, Priority: ${t.priority}, ${(t.workLogs || []).reduce((sum, log) => sum + log.hours, 0)}h logged)`).join(' | ') || 'None' }}
@@ -166,7 +175,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import TaskCard from './TaskCard.vue'
 import TaskModal from '@/modals/TaskModal.vue'
@@ -246,8 +255,10 @@ const workLogForm = reactive({
 })
 
 // Data
-const columns = ref(initialData.columns)
-let nextTaskId = Math.max(...initialData.columns.flatMap(col => col.tasks.map(t => t.id))) + 1
+let nextTaskId = computed(() => {
+  const allTasks = currentProject.value.tasks || []
+  return allTasks.length > 0 ? Math.max(...allTasks.map(t => t.id)) + 1 : 1
+})
 
 // Voice Recognition Setup
 onMounted(() => {
@@ -343,7 +354,7 @@ const processVoiceLogWork = (transcript) => {
 }
 
 const logWorkViaVoice = (taskId, hours, description, developer) => {
-  const task = findTaskById(taskId)
+  const task = findTask(taskId)
   if (!task) {
     showVoiceFeedback(`Task with ID ${taskId} not found`, 'error')
     return
@@ -379,7 +390,7 @@ const logWorkViaVoice = (taskId, hours, description, developer) => {
 }
 
 const addWorkLogToHistory = (taskId, hours, description, developer) => {
-  const task = findTaskById(taskId)
+  const task = findTask(taskId)
   if (!task) {
     showVoiceFeedback(`Task with ID ${taskId} not found`, 'error')
     return
@@ -443,30 +454,30 @@ const showVoiceFeedback = (message, type = 'info') => {
 
 // Computed properties for context
 const totalTasks = computed(() => 
-  columns.value.reduce((sum, col) => sum + col.tasks.length, 0)
+  currentProject.value.tasks ? currentProject.value.tasks.length : 0
 )
 
 const todoTasks = computed(() => 
-  columns.value.find(col => col.id === 'todo')?.tasks || []
+  currentProject.value.tasks ? currentProject.value.tasks.filter(task => task.status === 'todo') : []
 )
 
 const inProgressTasks = computed(() => 
-  columns.value.find(col => col.id === 'in-progress')?.tasks || []
+  currentProject.value.tasks ? currentProject.value.tasks.filter(task => task.status === 'in-progress') : []
 )
 
 const doneTasks = computed(() => 
-  columns.value.find(col => col.id === 'done')?.tasks || []
+  currentProject.value.tasks ? currentProject.value.tasks.filter(task => task.status === 'done') : []
 )
 
 const recentTasks = computed(() => {
-  const allTasks = columns.value.flatMap(col => col.tasks)
+  const allTasks = currentProject.value.tasks || []
   return allTasks
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     .slice(0, 3)
 })
 
 const totalLoggedHours = computed(() => {
-  const allTasks = columns.value.flatMap(col => col.tasks)
+  const allTasks = currentProject.value.tasks || []
   return allTasks.reduce((total, task) => {
     if (task.workLogs && task.workLogs.length > 0) {
       return total + task.workLogs.reduce((taskTotal, log) => taskTotal + (log.hours || 0), 0)
@@ -476,14 +487,14 @@ const totalLoggedHours = computed(() => {
 })
 
 const workHistoryCount = computed(() => {
-  const allTasks = columns.value.flatMap(col => col.tasks)
+  const allTasks = currentProject.value.tasks || []
   return allTasks.reduce((total, task) => {
     return total + (task.workLogs ? task.workLogs.length : 0)
   }, 0)
 })
 
 const recentWorkLogs = computed(() => {
-  const allTasks = columns.value.flatMap(col => col.tasks)
+  const allTasks = currentProject.value.tasks || []
   const allWorkLogs = allTasks.flatMap(task => 
     (task.workLogs || []).map(log => ({
       ...log,
@@ -526,7 +537,7 @@ const handleCreateTask = (event) => {
 
   // Create new task
   const newTask = {
-    id: nextTaskId++,
+    id: nextTaskId.value,
     title: title.trim(),
     description: description.trim(),
     status: taskStatus,
@@ -539,27 +550,20 @@ const handleCreateTask = (event) => {
     workLogs: []
   }
 
-  // Add to appropriate column
-  const targetColumn = columns.value.find(col => col.id === taskStatus)
-  if (targetColumn) {
-    targetColumn.tasks.push(newTask)
-    
-    event.detail.success = true
-    event.detail.message = `Task "${title}" created successfully`
-    event.detail.taskId = newTask.id
-    
-    showAIResponse(`Task "${title}" created in ${taskStatus} column`, 'success')
-  } else {
-    event.detail.success = false
-    event.detail.error = `Invalid status: ${taskStatus}`
-    showAIResponse(`Invalid status: ${taskStatus}`, 'error')
-  }
+  // Add to current project's tasks
+  currentProject.value.tasks.push(newTask)
+  
+  event.detail.success = true
+  event.detail.message = `Task "${title}" created successfully`
+  event.detail.taskId = newTask.id
+  
+  showAIResponse(`Task "${title}" created in ${taskStatus} column`, 'success')
 }
 
 const handleMoveTask = (event) => {
   const { taskId, newStatus } = event.detail
 
-  const task = findTaskById(taskId)
+  const task = findTask(taskId)
   if (!task) {
     event.detail.success = false
     event.detail.error = `Task with ID ${taskId} not found`
@@ -592,7 +596,7 @@ const handleMoveTask = (event) => {
 const handleUpdateTask = (event) => {
   const { taskId, title, description, priority, estimatedHours, comments } = event.detail
 
-  const task = findTaskById(taskId)
+  const task = findTask(taskId)
   if (!task) {
     event.detail.success = false
     event.detail.error = `Task with ID ${taskId} not found`
@@ -639,7 +643,7 @@ const handleLogWork = (event) => {
     return
   }
 
-  const task = findTaskById(taskId)
+  const task = findTask(taskId)
   if (!task) {
     event.detail.success = false
     event.detail.error = `Task with ID ${taskId} not found`
@@ -722,7 +726,7 @@ const handleVoixAddWorkLog = (event) => {
     return
   }
 
-  const task = findTaskById(taskId)
+  const task = findTask(taskId)
   if (!task) {
     event.detail.success = false
     event.detail.error = `Task with ID ${taskId} not found`
@@ -796,6 +800,14 @@ const showAIResponse = (message, type = 'success') => {
 // Helper function to find a task in the current project
 const findTask = (taskId) => {
   return currentProject.value.tasks.find(task => task.id === taskId)
+}
+
+// Helper function to move a task to a different column
+const moveTaskToColumn = (task, newStatus) => {
+  if (task && task.status !== newStatus) {
+    task.status = newStatus
+    task.updatedAt = new Date().toISOString()
+  }
 }
 
 // Task Modal Methods

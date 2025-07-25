@@ -1,5 +1,23 @@
 <template>
   <div id="app">
+    <!-- Global VOIX Tools for Navigation -->
+    <tool
+      name="open_reports"
+      description="Navigate to the Reports page to generate AI-powered project insights"
+      @call="handleOpenReports"
+    >
+      <prop name="reason" type="string" description="Optional reason for opening reports (e.g., 'monthly review', 'project summary')"></prop>
+    </tool>
+
+    <tool
+      name="open_project_board"
+      description="Navigate to a specific project's kanban board view"
+      @call="handleOpenProjectBoard"
+    >
+      <prop name="projectId" type="number" required description="ID of the project to open (1, 2, 3, etc.)"></prop>
+      <prop name="projectName" type="string" description="Optional project name for better context"></prop>
+    </tool>
+
     <nav class="main-nav">
       <div class="nav-brand">
         <h2>Project Manager</h2>
@@ -13,12 +31,62 @@
     <main class="main-content">
       <router-view />
     </main>
-  </div>
+
     <KanbanBoard />
+  </div>
 </template>
 
 <script setup>
-// App logic
+import { useRouter } from 'vue-router'
+import KanbanBoard from './components/KanbanBoard.vue'
+
+const router = useRouter()
+
+// Global VOIX tool handler for opening reports
+const handleOpenReports = (event) => {
+  const { reason } = event.detail
+
+  try {
+    router.push('/reports')
+    
+    event.detail.success = true
+    event.detail.message = `Navigated to Reports page${reason ? ` for ${reason}` : ''}`
+    
+    // Optional: Show a brief feedback message
+    console.log(`VOIX: Opened Reports page${reason ? ` - ${reason}` : ''}`)
+  } catch (error) {
+    event.detail.success = false
+    event.detail.error = 'Failed to navigate to Reports page'
+    console.error('Navigation error:', error)
+  }
+}
+
+// Global VOIX tool handler for opening project boards
+const handleOpenProjectBoard = (event) => {
+  const { projectId, projectName } = event.detail
+
+  try {
+    // Validate projectId
+    if (!projectId || isNaN(projectId) || projectId < 1) {
+      event.detail.success = false
+      event.detail.error = 'Invalid project ID. Please provide a valid project number (1, 2, 3, etc.)'
+      return
+    }
+
+    // Navigate to the project board
+    router.push(`/project/${projectId}`)
+    
+    event.detail.success = true
+    event.detail.message = `Navigated to ${projectName ? `${projectName} project` : `Project ${projectId}`} board`
+    
+    // Optional: Show a brief feedback message
+    console.log(`VOIX: Opened Project ${projectId} board${projectName ? ` (${projectName})` : ''}`)
+  } catch (error) {
+    event.detail.success = false
+    event.detail.error = `Failed to navigate to Project ${projectId} board`
+    console.error('Navigation error:', error)
+  }
+}
 </script>
 
 <style scoped>
