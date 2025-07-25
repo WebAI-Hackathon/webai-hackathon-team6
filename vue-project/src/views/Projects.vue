@@ -25,6 +25,11 @@
             </div>
         </div>
 
+        <!-- Version Footer -->
+        <div class="version-footer">
+            <span class="version-text">v1.0.0</span>
+        </div>
+
         <!-- Modals -->
         <ProjectModal :show="showProjectModal" :editing-project="editingProject" :project-form="projectForm"
             @close="closeModal" @save="saveProject" />
@@ -256,5 +261,23 @@ const handleViewKanban = (projectId) => {
 
 .details-btn:hover {
     background: #e5e7eb;
+}
+
+.version-footer {
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid #f3f4f6;
+    text-align: center;
+}
+
+.version-text {
+    color: #9ca3af;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    background: #f9fafb;
+    padding: 4px 12px;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
 }
 </style>
