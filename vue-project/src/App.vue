@@ -1,5 +1,17 @@
 <template>
   <div id="app">
+    <!-- Global App Context for AI awareness -->
+    <context name="app_state">
+      Total projects: {{ projects.length }}
+      Active projects: {{ activeProjects.length }}
+      Completed projects: {{ completedProjects.length }}
+      Total tasks across all projects: {{ totalTasksAcrossProjects }}
+      Current route: {{ currentRoute }}
+      Available projects: {{projects.map(p => `${p.id}: ${p.name} (${p.tasks?.length || 0} tasks)`).join(', ')}}
+      Recent activity: {{ recentActivity }}
+      Projects summary: {{ projectsSummary }}
+    </context>
+
     <nav class="main-nav">
       <div class="nav-brand">
         <h2>Project Manager</h2>
@@ -17,7 +29,78 @@
 </template>
 
 <script setup>
-// App logic
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+import { projects } from './stores/projectStore.js'
+
+const route = useRoute()
+
+// Computed properties for context
+const currentRoute = computed(() => route.path)
+
+const activeProjects = computed(() => {
+  return projects.value.filter(project => {
+    const progress = calculateProjectProgress(project)
+    return progress > 0 && progress < 100
+  })
+})
+
+const completedProjects = computed(() => {
+  return projects.value.filter(project => {
+    const progress = calculateProjectProgress(project)
+    return progress === 100
+  })
+})
+
+const totalTasksAcrossProjects = computed(() => {
+  return projects.value.reduce((total, project) => {
+    return total + (project.tasks?.length || 0)
+  }, 0)
+})
+
+const recentActivity = computed(() => {
+  // Get recent tasks from all projects
+  const allTasks = projects.value.flatMap(project =>
+    (project.tasks || []).map(task => ({
+      ...task,
+      projectName: project.name,
+      projectId: project.id
+    }))
+  )
+
+  // Sort by creation date and take the 3 most recent
+  const recentTasks = allTasks
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 3)
+
+  if (recentTasks.length === 0) return 'No recent activity'
+
+  return recentTasks.map(task =>
+    `${task.title} in ${task.projectName}`
+  ).join(', ')
+})
+
+const projectsSummary = computed(() => {
+  if (projects.value.length === 0) return 'No projects created'
+
+  return projects.value.map(project => {
+    const progress = calculateProjectProgress(project)
+    const taskCount = project.tasks?.length || 0
+    let status = 'Not started'
+
+    if (progress === 100) status = 'Complete'
+    else if (progress > 0) status = 'In progress'
+
+    return `${project.name}: ${status} (${taskCount} tasks, ${progress}% done)`
+  }).join(' | ')
+})
+
+// Helper function to calculate project progress
+const calculateProjectProgress = (project) => {
+  if (!project.tasks || project.tasks.length === 0) return 0
+  const completed = project.tasks.filter(t => t.status === 'done').length
+  return Math.round((completed / project.tasks.length) * 100)
+}
 </script>
 
 <style scoped>
@@ -72,5 +155,13 @@
 .main-content {
   min-height: calc(100vh - 80px);
   background: #f9fafb;
+}
+
+tool,
+prop,
+context,
+array,
+dict {
+  display: none;
 }
 </style>

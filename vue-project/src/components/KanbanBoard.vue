@@ -1,5 +1,31 @@
 <template>
   <div class="kanban-board">
+
+    <tool name="create_task" description="Create a new task in the current project" @call="handleCreateTaskVoix">
+      <prop name="title" type="string" required description="Task title"></prop>
+      <prop name="description" type="string" description="Task description (optional)"></prop>
+      <prop name="status" type="string" description="Task status: todo, in-progress, or done (default: todo)"></prop>
+      <prop name="priority" type="string" description="Task priority: low, medium, or high (default: medium)"></prop>
+      <prop name="tag" type="string" description="Task tag: bug-fix, feature, or organisational (default: feature)">
+      </prop>
+      <prop name="estimatedHours" type="number" description="Estimated hours to complete the task (default: 0)"></prop>
+      <prop name="comments" type="string" description="Additional comments or notes for the task (optional)"></prop>
+    </tool>
+
+    <!-- Context for current project state -->
+    <context name="kanban_project_state">
+      Current project: {{ currentProject?.name || 'No project selected' }}
+      Project ID: {{ currentProject?.id || 'N/A' }}
+      Total tasks: {{ currentProject?.tasks?.length || 0 }}
+      Todo tasks: {{ todoTasks.length }}
+      In Progress tasks: {{ inProgressTasks.length }}
+      Done tasks: {{ doneTasks.length }}
+      Available statuses: todo, in-progress, done
+      Available priorities: low, medium, high
+      Available tags: bug-fix, feature, organisational
+      Recent tasks: {{recentTasks.map(t => `${t.id}: ${t.title} (${t.status})`).join(', ')}}
+    </context>
+
     <div class="board-header">
       <div class="header-content">
         <h1>{{ currentProject?.name || 'Project Management' }}</h1>
@@ -228,6 +254,110 @@ const onDrop = (event, columnId) => {
     moveTask(currentProject.value.id, taskId, columnId)
   }
 }
+
+const handleCreateTaskVoix = (event) => {
+  const {
+    title,
+    description = '',
+    status = 'todo',
+    priority = 'medium',
+    tag = 'feature',
+    estimatedHours = 0,
+    comments = ''
+  } = event.detail
+
+  // Validation
+  if (!title || title.trim() === '') {
+    event.detail.success = false
+    event.detail.error = 'Task title is required'
+    return
+  }
+
+  if (!currentProject.value) {
+    event.detail.success = false
+    event.detail.error = 'No project selected. Please navigate to a project first.'
+    return
+  }
+
+  // Validate status
+  const validStatuses = ['todo', 'in-progress', 'done']
+  if (!validStatuses.includes(status)) {
+    event.detail.success = false
+    event.detail.error = `Invalid status. Must be one of: ${validStatuses.join(', ')}`
+    return
+  }
+
+  // Validate priority
+  const validPriorities = ['low', 'medium', 'high']
+  if (!validPriorities.includes(priority)) {
+    event.detail.success = false
+    event.detail.error = `Invalid priority. Must be one of: ${validPriorities.join(', ')}`
+    return
+  }
+
+  // Validate tag
+  const validTags = ['bug-fix', 'feature', 'organisational']
+  if (!validTags.includes(tag)) {
+    event.detail.success = false
+    event.detail.error = `Invalid tag. Must be one of: ${validTags.join(', ')}`
+    return
+  }
+
+  // Validate estimated hours
+  if (estimatedHours < 0) {
+    event.detail.success = false
+    event.detail.error = 'Estimated hours cannot be negative'
+    return
+  }
+
+  try {
+    // Create the task using your existing logic
+    const taskData = {
+      title: title.trim(),
+      description: description.trim(),
+      status,
+      priority,
+      tag,
+      estimatedHours: Number(estimatedHours),
+      comments: comments.trim()
+    }
+
+    // Use your existing addTask function from the store
+    const newTask = addTask(currentProject.value.id, taskData)
+
+    // Success response
+    event.detail.success = true
+    event.detail.message = `Task "${title}" created successfully in ${currentProject.value.name}`
+    event.detail.taskId = newTask.id
+    event.detail.taskData = newTask
+
+  } catch (error) {
+    event.detail.success = false
+    event.detail.error = `Failed to create task: ${error.message}`
+  }
+}
+
+
+// Computed properties for context
+const todoTasks = computed(() =>
+  currentProject.value?.tasks?.filter(task => task.status === 'todo') || []
+)
+
+const inProgressTasks = computed(() =>
+  currentProject.value?.tasks?.filter(task => task.status === 'in-progress') || []
+)
+
+const doneTasks = computed(() =>
+  currentProject.value?.tasks?.filter(task => task.status === 'done') || []
+)
+
+const recentTasks = computed(() => {
+  if (!currentProject.value?.tasks) return []
+  return currentProject.value.tasks
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 5)
+})
+
 </script>
 
 
