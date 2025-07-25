@@ -5,15 +5,15 @@
       "name": "To Do",
       "tasks": [
         {
-          "id": 1,
-          "title": "Setup Project Structure",
-          "description": "Initialize the Vue project and setup basic components",
+          "id": 5,
+          "title": "Define and Implement Role-Based Access Control (RBAC)",
+          "description": "Design and implement a role-based access control system to manage user permissions across different areas of the application.\n\nScope:\n1. **Role Definitions:**\n   - Identify key user roles (e.g., Admin, Editor, Viewer).\n   - Define access rights and restrictions for each role (e.g., edit rights, data visibility).\n\n2. **Backend Implementation:**\n   - Add roles and permission logic to the user model.\n   - Implement middleware that restricts access to protected routes based on user role.\n\n3. **Frontend Adjustments:**\n   - Dynamically hide or show UI components depending on the user's role.\n   - Disable buttons/actions if the user lacks permission.\n\n4. **Testing:**\n   - Verify that each role can only perform permitted actions.\n   - Include test users for each role and validate workflows.\n\nQuality Criteria:\n- Roles and permissions clearly documented.\n- Unauthorized access attempts are blocked on backend.\n- UI updates based on user roles without errors.\n- Functionality tested with at least 3 role types.\n\nUser Benefits:\n- Secure and predictable access aligned with user responsibilities.\n- Cleaner UI based on user needs (e.g., viewers won’t see admin features).\n- Reduces risk of accidental changes or data exposure.",
           "status": "todo",
           "priority": "high",
-          "tag": "organisational",
-          "estimatedHours": 4,
-          "comments": "This is the first task to get started",
-          "createdAt": "2024-07-24T10:00:00.000Z",
+          "tag": "feature",
+          "estimatedHours": 6,
+          "comments": "This task will lay the foundation for secure and scalable user management. Role design must align with business requirements before implementation begins.",
+          "createdAt": "2024-07-24T15:00:00.000Z",
           "workLogs": []
         }
       ]
@@ -25,27 +25,34 @@
         {
           "id": 2,
           "title": "Implement Login Function",
-          "description": "Create OAuth integration and frontend login page",
+          "description": "Develop and implement a secure, responsive login function with third-party authentication (OAuth 2.0) and seamless frontend integration.\n\nScope:\n1. **Backend Integration:**\n   - Implement OAuth 2.0 login flow using providers Google and GitHub.\n   - Use Passport.js middleware for Node.js to handle authentication and token exchange.\n   - Configure callback URLs and environment-based client secrets.\n   - Implement session management using JSON Web Tokens (JWT).\n\n2. **Frontend Login Page:**\n   - Build a responsive login form with Vue.js.\n   - Include branded buttons for Google and GitHub login.\n   - Add loading indicators, error feedback (e.g., access denied, invalid credentials), and accessibility (ARIA labels).\n\n3. **Session Handling & Security:**\n   - Store JWT securely in HttpOnly cookies.\n   - Implement logout functionality and session expiration.\n   - Enforce HTTPS and CORS policy for token exchange.\n\n4. **Error Handling & Logging:**\n   - Display user-friendly error messages (e.g., access denied, timeout).\n   - Log login attempts (provider, timestamp, user ID) for audit purposes.\n\nQuality Criteria:\n- Users can log in via Google or GitHub and are redirected to dashboard on success.\n- Session cookie is secure and persists for the expected duration.\n- Login UI is fully responsive and accessible on desktop and mobile.\n- Login tested across major browsers (Chrome, Firefox, Safari).\n- Unit tests validate login state transitions and token handling.\n- Authentication errors handled gracefully with retry options.\n\nUser Benefits:\n- Fast and secure login without needing to create new credentials.\n- Familiar authentication experience through trusted providers.\n- Peace of mind through improved security and session control.\n- Smooth experience across mobile and desktop devices.\n- Transparent feedback when something goes wrong during login.",
           "status": "in-progress",
           "priority": "medium",
           "tag": "feature",
           "estimatedHours": 8,
-          "comments": "Need to implement both OAuth and frontend",
+          "comments": "OAuth 2.0 backend integration with Google and GitHub was successfully completed using Passport.js.\nFrontend login form created with responsive layout using Tailwind CSS.\nJWT session handling partially implemented — currently working on cookie security flags and logout logic.\nInitial testing on Chrome and Firefox successful; Safari testing planned.\nUI error handling with toast notifications is in progress.",
           "createdAt": "2024-07-24T09:00:00.000Z",
           "workLogs": [
             {
               "id": 1,
               "developer": "John Doe",
               "hours": 2,
-              "description": "Implemented OAuth integration with Google and GitHub providers",
+              "description": "Implemented OAuth 2.0 integration with Google and GitHub using Passport.js. Set up environment variables and redirect routes for both providers. Tokens are being received and processed correctly.",
               "timestamp": "2024-07-23T10:00:00.000Z"
             },
             {
               "id": 2,
               "developer": "Jane Smith",
               "hours": 3,
-              "description": "Developed the frontend login page with responsive design",
+              "description": "Designed and implemented the responsive login page using Vue and Tailwind CSS. Added OAuth login buttons and basic error placeholders. Verified compatibility on desktop and mobile devices.",
               "timestamp": "2024-07-23T22:00:00.000Z"
+            },
+            {
+              "id": 3,
+              "developer": "John Doe",
+              "hours": 1.5,
+              "description": "Added JWT-based session handling with HttpOnly cookies and expiration policy. Started implementing logout route and cookie cleanup. Added server-side error logging for failed authentications.",
+              "timestamp": "2024-07-24T13:00:00.000Z"
             }
           ]
         }
@@ -54,7 +61,76 @@
     {
       "id": "done",
       "name": "Done",
-      "tasks": []
+      "tasks": [
+        {
+          "id": 3,
+          "title": "Initial Project Setup (Organizational)",
+          "description": "Organize the foundational elements required for effective project execution from an organizational perspective.\n\nScope:\n1. Team Onboarding:\n   - Ensure all project members have access to necessary tools (Confluence, Jira, Teams, Dynamics Sandbox).\n   - Schedule a kickoff session to introduce project goals and expectations.\n\n2. Milestone Definition:\n   - Align on key project milestones.\n   - Document them in Confluence.\n   - Get final approval from the project lead.\n\n3. Initial Work Package Planning:\n   - Define and structure the first technical and organizational work packages for the initial project phase or sprint.\n\n4. Tool Availability:\n   - Verify access to platforms: Dynamics 365 Sandbox, KingswaySoft, Confluence, Jira, test data.\n   - Resolve any access issues early.\n\n5. Communication Strategy with Stakeholders:\n   - Define meeting cadence (e.g., bi-weekly Sounding Board, weekly updates).\n   - Specify channels: Teams, email, and Confluence.\n\nQuality Criteria:\n- All project members fully onboarded within the first project week.\n- Milestones are clearly documented and approved by the project lead.\n- Initial work packages are created and prioritized in Jira.\n- All required tools are accessible and functional.\n- Stakeholder communication approach is defined and documented.",
+          "status": "done",
+          "priority": "high",
+          "tag": "organisational",
+          "estimatedHours": 6,
+          "comments": "A team onboarding session was held on August 2.\nAll members received access to Jira, Confluence, Microsoft Teams, and the Dynamics Sandbox.\n\nKey milestones were aligned with the project lead and documented in the internal Confluence space.\nInitial work packages (e.g., data assessment, stakeholder interviews, system analysis) were created and prioritized in the Jira backlog.\n\nTool availability was confirmed, including access to KingswaySoft and test data environments.\nCommunication with stakeholders was structured as bi-weekly Sounding Board meetings and a weekly project update email.\n\nAll routines were documented in the project’s Confluence workspace.",
+          "createdAt": "2024-07-24T12:00:00.000Z",
+          "workLogs": [
+            {
+              "id": 1,
+              "developer": "Sofia Weber",
+              "hours": 2,
+              "description": "Conducted onboarding meeting with the full project team. Introduced tools, access instructions, and overall goals. Confirmed access for all users via Confluence checklist.",
+              "timestamp": "2024-08-02T09:30:00.000Z"
+            },
+            {
+              "id": 2,
+              "developer": "Michael Ritter",
+              "hours": 1.5,
+              "description": "Defined and documented project milestones in Confluence. Synced with Julia Schmidt for validation and marked them for review by the leadership team.",
+              "timestamp": "2024-08-03T11:00:00.000Z"
+            },
+            {
+              "id": 3,
+              "developer": "Julia Schmidt",
+              "hours": 2.5,
+              "description": "Prepared first Jira backlog items including technical data migration steps and stakeholder engagement planning. Reviewed tool access for migration tools and confirmed availability.",
+              "timestamp": "2024-08-05T14:00:00.000Z"
+            }
+          ]
+        },
+        {
+          "id": 7,
+          "title": "Set Up CI/CD Pipeline for Automated Deployment",
+          "description": "Establish a Continuous Integration and Continuous Deployment (CI/CD) pipeline to automate the build, test, and deployment process from the start of the project.\n\nScope:\n1. **CI Pipeline:**\n   - Configure build pipeline using GitHub Actions (or GitLab CI, Azure DevOps depending on infrastructure).\n   - Install dependencies, run linter, and execute unit tests on every push to `main` and feature branches.\n\n2. **CD Pipeline:**\n   - Deploy to development/staging environment on push to `main`.\n   - Add manual approval step for production deployment.\n   - Use Docker and environment-based config for portability.\n\n3. **Secrets & Environment Setup:**\n   - Store sensitive credentials securely in GitHub Secrets or Azure Key Vault.\n   - Set up `.env` support and encrypted config for multiple environments.\n\n4. **Notification & Rollback:**\n   - Configure Slack or Teams notifications on build/deploy status.\n   - Enable rollback to last successful deployment on failure.\n\nQuality Criteria:\n- Build runs automatically on code push with linter + test feedback\n- Deployment to staging within 5 minutes of push to `main`\n- Secrets and environment configs handled securely\n- Teams notified on success/failure events",
+          "status": "done",
+          "priority": "high",
+          "tag": "technical",
+          "estimatedHours": 6,
+          "comments": "CI/CD was set up using GitHub Actions with Docker-based build steps. A `ci.yml` workflow file was created to lint, build, and test the application automatically on every push. For CD, a second workflow deploys the Docker image to the staging environment using GitHub Secrets for credentials and SSH key-based deployment.\n\nSlack notifications were added to inform the dev team on successful or failed deployments. Environment configuration is handled via `.env.staging` and `.env.production` files, encrypted using Mozilla SOPS and stored securely.\n\n**Benefits:**\n- 🧑‍💻 **For Developers/Users**: Immediate feedback on code quality and faster iterations\n- 🏢 **For Organization**: Fewer manual steps, more reliable and secure releases, standardization\n- 📈 **For Management**: Shorter time-to-market, improved transparency via automatic logs and metrics\n\nRollback is supported via tagged Docker images and versioned releases.",
+          "createdAt": "2024-07-24T08:30:00.000Z",
+          "workLogs": [
+            {
+              "id": 1,
+              "developer": "Julia Schmidt",
+              "hours": 2,
+              "description": "Configured GitHub Actions CI workflow with build, lint, and test stages. Added caching for dependencies and parallel job execution.",
+              "timestamp": "2024-07-21T10:00:00.000Z"
+            },
+            {
+              "id": 2,
+              "developer": "John Doe",
+              "hours": 2.5,
+              "description": "Created CD pipeline for auto-deployment to staging using Docker and SSH. Verified container health checks post-deploy.",
+              "timestamp": "2024-07-21T14:00:00.000Z"
+            },
+            {
+              "id": 3,
+              "developer": "Sofia Weber",
+              "hours": 1.5,
+              "description": "Set up Slack integration for CI/CD status notifications. Wrote internal guide for developers on how to use and trigger the pipeline.",
+              "timestamp": "2024-07-22T09:00:00.000Z"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
