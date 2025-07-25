@@ -43,44 +43,55 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import TaskCard from './TaskCard.vue'
 import TaskModal from '@/modals/TaskModal.vue'
 import TaskDetailModal from '@/modals/TaskDetailModal.vue'
 import WorkLogModal from '@/modals/WorkLogModal.vue'
-import projectsData from '../data/projects.json'
+import {
+  projects,
+  currentProject,
+  setCurrentProject,
+  addTask,
+  updateTask,
+  deleteTask,
+  moveTask,
+  findTask,
+  addWorkLog
+} from '../stores/projectStore.js'
 
 const route = useRoute()
 
-// Create a reactive copy of the projects data
-const projects = ref(JSON.parse(JSON.stringify(projectsData)))
-
-// Get the current project based on the route parameter
-const currentProject = computed(() => {
-  const projectId = parseInt(route.params.projectId) || 1
-  return projects.value.find(p => p.id === projectId) || projects.value[0]
-})
-
+// Watch for route changes and update current project
+watch(() => route.params.projectId, (newProjectId) => {
+  if (newProjectId) {
+    setCurrentProject(parseInt(newProjectId))
+  }
+}, { immediate: true })
 
 // Create columns based on the current project's tasks
-const columns = computed(() => [
-  {
-    id: 'todo',
-    name: 'To Do',
-    tasks: currentProject.value.tasks.filter(task => task.status === 'todo')
-  },
-  {
-    id: 'in-progress',
-    name: 'In Progress',
-    tasks: currentProject.value.tasks.filter(task => task.status === 'in-progress')
-  },
-  {
-    id: 'done',
-    name: 'Done',
-    tasks: currentProject.value.tasks.filter(task => task.status === 'done')
-  }
-])
+const columns = computed(() => {
+  if (!currentProject.value) return []
+
+  return [
+    {
+      id: 'todo',
+      name: 'To Do',
+      tasks: currentProject.value.tasks.filter(task => task.status === 'todo')
+    },
+    {
+      id: 'in-progress',
+      name: 'In Progress',
+      tasks: currentProject.value.tasks.filter(task => task.status === 'in-progress')
+    },
+    {
+      id: 'done',
+      name: 'Done',
+      tasks: currentProject.value.tasks.filter(task => task.status === 'done')
+    }
+  ]
+})
 
 // Modal states
 const showTaskModal = ref(false)
@@ -107,20 +118,17 @@ const workLogForm = reactive({
   description: ''
 })
 
-// Helper function to find a task in the current project
-const findTask = (taskId) => {
-  return currentProject.value.tasks.find(task => task.id === taskId)
-}
-
 // Task Modal Methods
 const resetForm = () => {
-  taskForm.title = ''
-  taskForm.description = ''
-  taskForm.status = 'todo'
-  taskForm.priority = 'medium'
-  taskForm.tag = 'feature'
-  taskForm.estimatedHours = 0
-  taskForm.comments = ''
+  Object.assign(taskForm, {
+    title: '',
+    description: '',
+    status: 'todo',
+    priority: 'medium',
+    tag: 'feature',
+    estimatedHours: 0,
+    comments: ''
+  })
 }
 
 const closeModal = () => {
@@ -130,28 +138,21 @@ const closeModal = () => {
 }
 
 const saveTask = (formData) => {
+  if (!currentProject.value) return
+
   if (editingTask.value) {
     // Update existing task
-    const taskIndex = currentProject.value.tasks.findIndex(t => t.id === editingTask.value)
-    if (taskIndex !== -1) {
-      Object.assign(currentProject.value.tasks[taskIndex], formData)
-    }
+    updateTask(currentProject.value.id, editingTask.value, formData)
   } else {
     // Create new task
-    const newTask = {
-      id: Date.now(),
-      ...formData,
-      createdAt: new Date().toISOString(),
-      workLogs: []
-    }
-    currentProject.value.tasks.push(newTask)
+    addTask(currentProject.value.id, formData)
   }
   closeModal()
 }
 
 // Task Detail Modal Methods
 const viewTask = (taskId) => {
-  const task = findTask(taskId)
+  const task = findTask(currentProject.value?.id, taskId)
   if (task) {
     viewingTask.value = task
     showTaskDetailModal.value = true
@@ -165,7 +166,7 @@ const closeTaskDetailModal = () => {
 
 // Work Log Modal Methods
 const logWork = (taskId) => {
-  const task = findTask(taskId)
+  const task = findTask(currentProject.value?.id, taskId)
   if (task) {
     workLogTask.value = task
     showWorkLogModal.value = true
@@ -173,9 +174,11 @@ const logWork = (taskId) => {
 }
 
 const resetWorkLogForm = () => {
-  workLogForm.developer = 'Pritesh Soni'
-  workLogForm.hours = 0
-  workLogForm.description = ''
+  Object.assign(workLogForm, {
+    developer: 'Pritesh Soni',
+    hours: 0,
+    description: ''
+  })
 }
 
 const closeWorkLogModal = () => {
@@ -185,26 +188,16 @@ const closeWorkLogModal = () => {
 }
 
 const saveWorkLog = (formData) => {
-  if (!workLogTask.value) return
+  if (!workLogTask.value || !currentProject.value) return
 
-  const newWorkLog = {
-    id: Date.now(),
-    ...formData,
-    timestamp: new Date().toISOString()
-  }
-
-  if (!workLogTask.value.workLogs) {
-    workLogTask.value.workLogs = []
-  }
-
-  workLogTask.value.workLogs.push(newWorkLog)
+  addWorkLog(currentProject.value.id, workLogTask.value.id, formData)
   closeWorkLogModal()
 }
 
 // Task Actions
 const editTask = (taskId) => {
   closeTaskDetailModal()
-  const task = findTask(taskId)
+  const task = findTask(currentProject.value?.id, taskId)
   if (task) {
     editingTask.value = taskId
     Object.assign(taskForm, {
@@ -223,19 +216,16 @@ const editTask = (taskId) => {
 const handleDeleteTask = (taskId) => {
   if (confirm('Are you sure you want to delete this task?')) {
     closeTaskDetailModal()
-    const taskIndex = currentProject.value.tasks.findIndex(t => t.id === taskId)
-    if (taskIndex !== -1) {
-      currentProject.value.tasks.splice(taskIndex, 1)
+    if (currentProject.value) {
+      deleteTask(currentProject.value.id, taskId)
     }
   }
 }
 
 const onDrop = (event, columnId) => {
   const taskId = parseInt(event.dataTransfer.getData('taskId'))
-  const task = findTask(taskId)
-
-  if (task && task.status !== columnId) {
-    task.status = columnId
+  if (currentProject.value) {
+    moveTask(currentProject.value.id, taskId, columnId)
   }
 }
 </script>

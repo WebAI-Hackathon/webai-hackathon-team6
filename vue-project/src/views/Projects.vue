@@ -29,11 +29,9 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
-import projectsData from '../data/projects.json'
-import { ref } from 'vue'
+import { projects } from '../stores/projectStore.js'
 
 const router = useRouter()
-const projects = ref(projectsData)
 
 const viewKanban = (projectId) => {
     router.push(`/kanban/${projectId}`)

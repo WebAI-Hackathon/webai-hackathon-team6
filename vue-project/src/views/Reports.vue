@@ -142,9 +142,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { ReportService } from '../services/reportService.js'
-import projectsData from '../data/projects.json'
-
-const projects = ref(projectsData)
+import { projects } from '../stores/projectStore.js'
 
 const availableTags = ref([
     { value: 'bug-fix', label: 'Bug Fix' },
@@ -169,7 +167,7 @@ const error = ref(null)
 // Computed properties
 const availableTasks = computed(() => {
     const project = projects.value.find(p => p.id == selectedProject.value)
-    return project ? project.tasks : []
+    return project?.tasks || []
 })
 
 const canGenerate = computed(() => {
