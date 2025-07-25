@@ -27,7 +27,7 @@
 
         <!-- Version Footer -->
         <div class="version-footer">
-            <span class="version-text">v1.0.1</span>
+            <span class="version-text">v2.2.1</span>
         </div>
 
         <!-- Modals -->
